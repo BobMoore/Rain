@@ -1,21 +1,25 @@
 package com.follett.mywebapp.util;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class CodeContainer {
 
-	private HashMap<String, ArrayList<String>> steps;
+	private ArrayList<CodeStep> steps;
 
 	public CodeContainer() {
-		this.steps = new HashMap<String, ArrayList<String>>();
+		this.steps = new ArrayList<CodeStep>();
 	}
 
 	public void addStep(String tagID, ArrayList<String> variables) {
-		this.steps.put(tagID, variables);
+		this.steps.add(new CodeStep(tagID, variables));
 	}
 
-	public HashMap<String, ArrayList<String>> getStepList(){
+	public ArrayList<CodeStep> getStepList(){
 		return this.steps;
+	}
+
+	@Override
+	public String toString() {
+		return this.steps.toString();
 	}
 }

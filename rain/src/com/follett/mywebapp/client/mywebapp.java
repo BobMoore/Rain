@@ -32,6 +32,7 @@ import com.google.gwt.user.client.ui.TabLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.SelectionChangeEvent;
 
@@ -246,8 +247,27 @@ public class mywebapp implements EntryPoint {
 			// TODO Generate the code!
 			//step one get a list of tags and variables to be sent
 			CodeContainer testCode = new CodeContainer();
+			String tagID;
+			ArrayList<String> variables;
 			FlexTable instructionTable = getStepFlexTable();
-
+			//THIS NEEDS TO IGNORE THE STEP FIELDS OR IT WILL BREAK!
+			for(int a = 1; a < instructionTable.getRowCount(); a++) {
+				if(a != getSetupRow()) {
+					tagID =	instructionTable.getText(a, 0);
+					//scroll through the boxes to see if they are text fields or buttons
+					int b = 1;
+					Widget w = instructionTable.getWidget(a, b);
+					variables = new ArrayList<String>();
+					while(!(w instanceof Button)) {
+						TextBox box = (TextBox)w;
+						variables.add(box.getText());
+						b++;
+						w = instructionTable.getWidget(a, b);
+					}
+					testCode.addStep(tagID, variables);
+				}
+			}
+			System.out.print(testCode.toString() + "\n");
 
 			//step two send them to the service to gather the code snipets
 			//step three gather the code that was written from the service and do something with it

@@ -17,7 +17,6 @@ package com.follett.mywebapp.client;
 
 import java.util.List;
 
-import com.google.gwt.user.client.Random;
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.ProvidesKey;
@@ -40,24 +39,24 @@ public class PatronDatabase {
 
     private PatronType(String typeName) {
       this.typeName = typeName;
-      logins = new PatronLoginTypes[loginTypes.length];
+      this.logins = new PatronLoginTypes[loginTypes.length];
       for (int i = 0; i < loginTypes.length; i++) {
-    	  logins[i] = new PatronLoginTypes(this, loginTypes[i]);
+    	  this.logins[i] = new PatronLoginTypes(this, loginTypes[i]);
       }
     }
 
     public String getDisplayName() {
-    	return typeName;
+    	return this.typeName;
     }
 
 	@Override
 	public int compareTo(PatronType o) {
 		return (o == null || o.typeName == null) ? -1
-				: -o.typeName.compareTo(typeName);
+				: -o.typeName.compareTo(this.typeName);
 	}
 
 	public PatronLoginTypes[] getLogins() {
-		return logins;
+		return this.logins;
 	}
   }
   /**
@@ -77,15 +76,15 @@ public class PatronDatabase {
     public PatronLoginTypes(PatronType type, String loginType) {
     	this.type = type;
     	this.loginType = loginType;
-    	myAccessLevels = new PatronAccessLevel[accessLevels.length];
+    	this.myAccessLevels = new PatronAccessLevel[accessLevels.length];
     	for (int i = 0; i < accessLevels.length; i++) {
-    		myAccessLevels[i] = new PatronAccessLevel(this, accessLevels[i]);
+    		this.myAccessLevels[i] = new PatronAccessLevel(this, accessLevels[i]);
     	}
     }
 
     public int compareTo(PatronLoginTypes o) {
       return (o == null || o.loginType == null) ? -1
-				: -o.loginType.compareTo(loginType);
+				: -o.loginType.compareTo(this.loginType);
     }
 
     @Override
@@ -94,7 +93,7 @@ public class PatronDatabase {
     }
 
 	public PatronAccessLevel[] getMyAccessLevels() {
-		return myAccessLevels;
+		return this.myAccessLevels;
 	}
   }
   /**
@@ -127,18 +126,18 @@ public class PatronDatabase {
     public PatronAccessLevel(String level) {
     	this.id = nextId;
     	nextId++;
-    	accessLevelID = level;
+    	this.accessLevelID = level;
     }
 
     public int compareTo(PatronAccessLevel o) {
       return (o == null || o.accessLevelID == null) ? -1
-          : -o.accessLevelID.compareTo(accessLevelID);
+          : -o.accessLevelID.compareTo(this.accessLevelID);
     }
 
     @Override
     public boolean equals(Object o) {
       if (o instanceof PatronAccessLevel) {
-        return id == ((PatronAccessLevel) o).id;
+        return this.id == ((PatronAccessLevel) o).id;
       }
       return false;
     }
@@ -147,7 +146,7 @@ public class PatronDatabase {
      * @return the contact's firstName
      */
     public String getaccessLevelID() {
-      return accessLevelID;
+      return this.accessLevelID;
     }
 
     /**
@@ -187,13 +186,10 @@ public class PatronDatabase {
    * Construct a new contact database.
    */
   private PatronDatabase() {
-    types = new PatronType[typeNames.length];
+    this.types = new PatronType[typeNames.length];
     for (int i = 0; i < typeNames.length; i++) {
-      types[i] = new PatronType(typeNames[i]);
+      this.types[i] = new PatronType(typeNames[i]);
     }
-
-    //TODO implement real thing
-    //add login for each type
   }
 
   /**
@@ -202,7 +198,7 @@ public class PatronDatabase {
    * @param contact the contact to add.
    */
   public void addContact(PatronAccessLevel contact) {
-    List<PatronAccessLevel> contacts = dataProvider.getList();
+    List<PatronAccessLevel> contacts = this.dataProvider.getList();
     // Remove the contact first so we don't add a duplicate.
     contacts.remove(contact);
     contacts.add(contact);
@@ -215,32 +211,22 @@ public class PatronDatabase {
    * @param display a {@Link HasData}.
    */
   public void addDataDisplay(HasData<PatronAccessLevel> display) {
-    dataProvider.addDataDisplay(display);
+    this.dataProvider.addDataDisplay(display);
   }
 
   public ListDataProvider<PatronAccessLevel> getDataProvider() {
-    return dataProvider;
+    return this.dataProvider;
   }
 
   /**
    * Refresh all displays.
    */
   public void refreshDisplays() {
-    dataProvider.refresh();
-  }
-
-  /**
-   * Get the next random value from an array.
-   *
-   * @param array the array
-   * @return a random value in the array
-   */
-  private <T> T nextValue(T[] array) {
-    return array[Random.nextInt(array.length)];
+    this.dataProvider.refresh();
   }
 
 public PatronType[] getTypes() {
-	return types;
+	return this.types;
 }
 
 }

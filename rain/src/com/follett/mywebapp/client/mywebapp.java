@@ -54,7 +54,6 @@ public class mywebapp implements EntryPoint {
 
 	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
 
-//comment!
   /**
    * This is the entry point method.
    */

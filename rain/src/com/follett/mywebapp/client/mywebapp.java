@@ -1,10 +1,17 @@
 package com.follett.mywebapp.client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.follett.mywebapp.client.PatronDatabase.PatronAccessLevel;
+import com.follett.mywebapp.server.TreeBuilderService;
+import com.follett.mywebapp.server.TreeBuilderServiceAsync;
+import com.follett.mywebapp.util.CodeContainer;
+import com.follett.mywebapp.util.ValidationTreeDataItem;
+import com.follett.mywebapp.util.ValidationTreeNode;
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -14,6 +21,7 @@ import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.user.cellview.client.CellBrowser;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
@@ -36,7 +44,6 @@ public class mywebapp implements EntryPoint {
    * returns an error.
    */
 	private FlexTable stepFlexTable;
-	private FlexTable setupFlexTable;
 	private int setupRow = 1;
 	private int validationRow = 1;
 	private boolean editTree = false;
@@ -44,14 +51,14 @@ public class mywebapp implements EntryPoint {
 	private ArrayList<String> identifierKey = new ArrayList<String>();
 	private int startKey = 10;
 
+	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
+
 
   /**
    * This is the entry point method.
    */
   public void onModuleLoad() {
 
-	    // Create a tree with a few items in it.
-	    final TreeItem root = new TreeItem("Log In");
 	    final Button sendButton = new Button("Add Step");
 	    final Button saveButton = new Button("Save Test");
 	    final Button generateCode = new Button("Generate Code");
@@ -68,10 +75,10 @@ public class mywebapp implements EntryPoint {
 	    final int columnTwo = 12;
 	    final int rowTwo = 4;
 	    final int columnThree = 23;
-	    final Tree t = new Tree();
+	    Tree t = new Tree();
 	    setStepFlexTable(new FlexTable());
-	    setSetupFlexTable(new FlexTable());
 
+	    t = buildTree();
 
 	    // Create a three-pane layout with splitters.
 	    SplitLayoutPanel p = new SplitLayoutPanel();
@@ -103,8 +110,11 @@ public class mywebapp implements EntryPoint {
 	    cellBrowser.setAnimationEnabled(true);
 
 
+
 	    RootLayoutPanel rp = RootLayoutPanel.get();
 	    rp.add(p);
+
+
 
 	    buildButtonPanel(sendButton, saveButton, generateCode, addSetup,
 				addStepField, selectedText, buttonPanel, width, height, columnOne,
@@ -112,11 +122,8 @@ public class mywebapp implements EntryPoint {
 
 	    buildSetupPanel(setupPanel, cellBrowser);
 
-	    buildMainPanel(root, mainPanel, buttonPanel, setupPanel, t, p);
+	    buildMainPanel(mainPanel, buttonPanel, setupPanel, t, p);
 
-	    // Add it to the root tree. TODO get this to load in the actual items from the db for tree steps
-	    root.addItem(new TreeItem("Circulation"));
-	    root.addItem(new TreeItem("Catalog"));
 	    buildStepTable();
 
 	    //Listeners
@@ -124,12 +131,20 @@ public class mywebapp implements EntryPoint {
 
 			@Override
 			public void onSelection(SelectionEvent<TreeItem> event) {
-				TreeItem selected = event.getSelectedItem();
+				ValidationTreeNode selected = (ValidationTreeNode)event.getSelectedItem();
 				if(!isEditTree()) {
 					getStepFlexTable().setText(getValidationRow(), 0, selected.getText());
 					Button removeStepButton = new Button("x");
+					int buttonOffset = 0;
+					if(selected.getFields() != null) {
+						for(int a = 0; a < selected.getFields().intValue(); a++) {
+							TextBox box = new TextBox();
+							getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, box);
+							buttonOffset++;
+						}
+					}
 					removeStepButton.addClickHandler(new removeStepHandler(getStartKey() + ""));
-					getStepFlexTable().setWidget(getValidationRow(), 1, removeStepButton);
+					getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, removeStepButton);
 					addValidationStep(getValidationRow(),selected.getText());
 					addIdentifierKey(getValidationRow(), getStartKey() + "");
 					bumpValidationRow();
@@ -180,13 +195,15 @@ public class mywebapp implements EntryPoint {
         }
       }
 
-      public void setTotalItems(int totalItems) {
+      @SuppressWarnings("unused")
+	public void setTotalItems(int totalItems) {
     	  this.totalItems = totalItems;
       }
 
 
-      public int getTotalItems() {
-    	  return totalItems;
+      @SuppressWarnings("unused")
+	public int getTotalItems() {
+    	  return this.totalItems;
       }
     }
 
@@ -222,6 +239,20 @@ public class mywebapp implements EntryPoint {
 		}
     }
 
+    class GenerateCodeHandler implements ClickHandler {
+
+		@Override
+		public void onClick(ClickEvent event) {
+			// TODO Generate the code!
+			//step one get a list of tags and variables to be sent
+			CodeContainer testCode = new CodeContainer();
+			FlexTable instructionTable = getStepFlexTable();
+
+
+			//step two send them to the service to gather the code snipets
+			//step three gather the code that was written from the service and do something with it
+		}
+    }
 
     // Add a handler to send the name to the server
     MyHandler handler = new MyHandler();
@@ -231,11 +262,53 @@ public class mywebapp implements EntryPoint {
     addSetup.addClickHandler(setupHandler);
     TreeHandler tHandler = new TreeHandler();
     t.addSelectionHandler(tHandler);
-
+    GenerateCodeHandler cHandler = new GenerateCodeHandler();
+    generateCode.addClickHandler(cHandler);
   }
 
+private Tree buildTree() {
+	final Tree t = new Tree();
+	// Initialize the service proxy.
+    if (this.treeBuildingService == null) {
+    	this.treeBuildingService = GWT.create(TreeBuilderService.class);
+    }
+
+    // Set up the callback object.
+    AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>> callback = new AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>>() {
+      public void onFailure(Throwable caught) {
+    	  t.addItem("Failure!");
+      }
+
+	@Override
+	public void onSuccess(HashMap<String, ArrayList<ValidationTreeDataItem>> result) {
+		ArrayList<ValidationTreeDataItem> roots = result.get(null);
+		for (ValidationTreeDataItem items : roots) {
+			ValidationTreeNode node = new ValidationTreeNode(items);
+			if(result.containsKey(node.getTagID())) {
+				addChildrenToTree(node, result);
+			}
+			t.addItem(node);
+		}
+	}
+
+	public void addChildrenToTree(ValidationTreeNode node, HashMap<String, ArrayList<ValidationTreeDataItem>> result) {
+		ArrayList<ValidationTreeDataItem> branches = result.get(node.getTagID());
+		for (ValidationTreeDataItem branch : branches) {
+			ValidationTreeNode leaf = new ValidationTreeNode(branch);
+			if(result.containsKey(leaf.getTagID())) {
+				addChildrenToTree(leaf, result);
+			}
+			node.addItem(leaf);
+		}
+	}
+
+    };
+    this.treeBuildingService.getTreeItems(callback);
+    return t;
+}
+
 private void buildSetupPanel(final TabLayoutPanel setupPanel, CellBrowser tree) {
-	//TODO add in the items for the tabs and checkboxes
+	//TODO add in the items for the tabs and check boxes
 	setupPanel.add(tree,"Patrons");
 	setupPanel.add(new HTML("Sites"),"Sites");
 }
@@ -245,6 +318,7 @@ private void buildButtonPanel(final Button sendButton, final Button saveButton,
 		final TextBox addStepField, TextBox selectedLabel, final LayoutPanel buttonPanel,
 		final int width, final int height, final int columnOne,
 		final int rowOne, final int columnTwo, final int rowTwo, int columnThree) {
+	//TODO build this into the xml
 	buttonPanel.add(sendButton);
 	buttonPanel.setWidgetLeftWidth(sendButton, columnOne, Unit.EM, width, Unit.EM);
 	buttonPanel.setWidgetTopHeight(sendButton, rowOne, Unit.EM, height, Unit.EM);
@@ -266,11 +340,10 @@ private void buildButtonPanel(final Button sendButton, final Button saveButton,
 
 }
 
-private void buildMainPanel(final TreeItem root, final LayoutPanel mainPanel,
-		final LayoutPanel buttonPanel, final TabLayoutPanel setupPanel,
-		final Tree t, SplitLayoutPanel p) {
+private void buildMainPanel(final LayoutPanel mainPanel, final LayoutPanel buttonPanel,
+		final TabLayoutPanel setupPanel, final Tree t,
+		SplitLayoutPanel p) {
 	mainPanel.add(getStepFlexTable());
-	t.addItem(root);
 	p.addWest(t, 256);
 	p.addNorth(setupPanel, 256);
 	p.addNorth(buttonPanel, 100);
@@ -291,7 +364,7 @@ public void setEditTree(boolean editTree) {
 }
 
 public boolean isEditTree() {
-	return editTree;
+	return this.editTree;
 }
 
 public void setStepFlexTable(FlexTable stepFlexTable) {
@@ -331,7 +404,7 @@ public void addValidationStep(int index, String step) {
 }
 
 public ArrayList<String> getIdentifierKey() {
-	return identifierKey;
+	return this.identifierKey;
 }
 
 public void addIdentifierKey(int index, String key) {
@@ -347,19 +420,11 @@ public void removeIndexKey(int keyIndex) {
 }
 
 public int getStartKey() {
-	return startKey;
+	return this.startKey;
 }
 
 public void bumpStartKey() {
 	this.startKey++;
-}
-
-public FlexTable getSetupFlexTable() {
-	return setupFlexTable;
-}
-
-public void setSetupFlexTable(FlexTable setupFlexTable) {
-	this.setupFlexTable = setupFlexTable;
 }
 
 public int getSetupRow() {

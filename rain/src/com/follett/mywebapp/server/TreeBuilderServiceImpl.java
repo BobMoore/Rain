@@ -58,7 +58,7 @@ public String greetServer(String input) throws IllegalArgumentException  {
 		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
 		  // TODO get tree items and build them into the tree
 		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
-		  "databaseName=Rain;user=sa;password=stuffy;";
+		  "databaseName=Rain;";
 		  Connection conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
 		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.TreeItems ORDER BY parentTagID");

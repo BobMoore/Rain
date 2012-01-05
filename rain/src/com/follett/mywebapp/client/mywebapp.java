@@ -66,6 +66,7 @@ public class mywebapp implements EntryPoint {
 	    final TextBox addStepField = new TextBox();
 	    final TextBox selectedText = new TextBox();
 	    final LayoutPanel mainPanel = new LayoutPanel();
+	    final LayoutPanel bookSetupPanel = new LayoutPanel();
 	    final LayoutPanel buttonPanel = new LayoutPanel();
 	    final TabLayoutPanel setupPanel = new TabLayoutPanel(.7, Unit.CM);
 	    final int width = 10;
@@ -80,7 +81,6 @@ public class mywebapp implements EntryPoint {
 
 	    t = buildTree();
 
-	    // Create a three-pane layout with splitters.
 	    SplitLayoutPanel p = new SplitLayoutPanel();
 
 	    CellBrowser cellBrowser;
@@ -120,7 +120,7 @@ public class mywebapp implements EntryPoint {
 				addStepField, selectedText, buttonPanel, width, height, columnOne,
 				rowOne, columnTwo, rowTwo, columnThree);
 
-	    buildSetupPanel(setupPanel, cellBrowser);
+	    buildSetupPanel(bookSetupPanel, setupPanel, cellBrowser);
 
 	    buildMainPanel(mainPanel, buttonPanel, setupPanel, t, p);
 
@@ -326,8 +326,10 @@ private Tree buildTree() {
     return t;
 }
 
-private void buildSetupPanel(final TabLayoutPanel setupPanel, CellBrowser tree) {
+private void buildSetupPanel(LayoutPanel bookSetupPanel,final TabLayoutPanel setupPanel, CellBrowser tree) {
 	//TODO add in the items for the tabs and check boxes
+	bookSetupPanel.add(new Button("Textbook"));
+	setupPanel.add(bookSetupPanel, "Bibs");
 	setupPanel.add(tree,"Patrons");
 	setupPanel.add(new HTML("Sites"),"Sites");
 }

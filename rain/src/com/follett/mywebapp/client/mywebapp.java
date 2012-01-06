@@ -2,9 +2,7 @@ package com.follett.mywebapp.client;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
-import com.follett.mywebapp.client.PatronDatabase.PatronAccessLevel;
 import com.follett.mywebapp.server.TreeBuilderService;
 import com.follett.mywebapp.server.TreeBuilderServiceAsync;
 import com.follett.mywebapp.util.CodeContainer;
@@ -20,12 +18,12 @@ import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
-import com.google.gwt.user.cellview.client.CellBrowser;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.LayoutPanel;
+import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TabLayoutPanel;
@@ -33,8 +31,6 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
-import com.google.gwt.view.client.MultiSelectionModel;
-import com.google.gwt.view.client.SelectionChangeEvent;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -67,6 +63,8 @@ public class mywebapp implements EntryPoint {
 	    final TextBox selectedText = new TextBox();
 	    final LayoutPanel mainPanel = new LayoutPanel();
 	    final LayoutPanel bookSetupPanel = new LayoutPanel();
+	    final LayoutPanel patronSetupPanel = new LayoutPanel();
+	    final LayoutPanel siteSetupPanel = new LayoutPanel();
 	    final LayoutPanel buttonPanel = new LayoutPanel();
 	    final TabLayoutPanel setupPanel = new TabLayoutPanel(.7, Unit.CM);
 	    final int width = 10;
@@ -83,44 +81,14 @@ public class mywebapp implements EntryPoint {
 
 	    SplitLayoutPanel p = new SplitLayoutPanel();
 
-	    CellBrowser cellBrowser;
-
-	    final MultiSelectionModel<PatronAccessLevel> selectionModel = new MultiSelectionModel<PatronAccessLevel>(PatronDatabase.PatronAccessLevel.KEY_PROVIDER);
-	    selectionModel.addSelectionChangeHandler(
-	        new SelectionChangeEvent.Handler() {
-	          public void onSelectionChange(SelectionChangeEvent event) {
-	            StringBuilder sb = new StringBuilder();
-	            boolean first = true;
-	            List<PatronAccessLevel> selected = new ArrayList<PatronAccessLevel>(
-	                selectionModel.getSelectedSet());
-	            for (PatronAccessLevel value : selected) {
-	              if (first) {
-	                first = false;
-	              } else {
-	                sb.append(", ");
-	              }
-	              sb.append(value.getaccessLevelID());
-	            }
-	            selectedText.setText(sb.toString());
-	          }
-	        });
-
-	    cellBrowser = new CellBrowser(
-	        new PatronSelectViewModel(selectionModel), null);
-	    cellBrowser.setAnimationEnabled(true);
-
-
-
 	    RootLayoutPanel rp = RootLayoutPanel.get();
 	    rp.add(p);
-
-
 
 	    buildButtonPanel(sendButton, saveButton, generateCode, addSetup,
 				addStepField, selectedText, buttonPanel, width, height, columnOne,
 				rowOne, columnTwo, rowTwo, columnThree);
 
-	    buildSetupPanel(bookSetupPanel, setupPanel, cellBrowser);
+	    buildSetupPanel(setupPanel, patronSetupPanel, bookSetupPanel, siteSetupPanel);
 
 	    buildMainPanel(mainPanel, buttonPanel, setupPanel, t, p);
 
@@ -326,12 +294,83 @@ private Tree buildTree() {
     return t;
 }
 
-private void buildSetupPanel(LayoutPanel bookSetupPanel,final TabLayoutPanel setupPanel, CellBrowser tree) {
+private void buildSetupPanel(final TabLayoutPanel setupPanel, LayoutPanel patronSetupPanel, LayoutPanel bookSetupPanel, LayoutPanel siteSetupPanel) {
 	//TODO add in the items for the tabs and check boxes
-	bookSetupPanel.add(new Button("Textbook"));
+	//possibly allow for added patrons to flag into the bib box to allow for selecting them to checkout to?
+	createBookSetupPanel(bookSetupPanel);
 	setupPanel.add(bookSetupPanel, "Bibs");
-	setupPanel.add(tree,"Patrons");
-	setupPanel.add(new HTML("Sites"),"Sites");
+	createPatronSetupPanel(patronSetupPanel);
+	setupPanel.add(patronSetupPanel,"Patrons");
+	createSiteSetupPanel(siteSetupPanel);
+	setupPanel.add(siteSetupPanel,"Sites");
+}
+
+private void createBookSetupPanel(LayoutPanel bookSetupPanel) {
+	FlexTable bibTable = new FlexTable();
+	Button addSetupButton = new Button("Add this!");
+	//TODO read this data in from sql
+	String[] columnHeadings = {"Material Type", "Checked out?"};
+	String materialGroup = "materialTypeGroup";
+	String[] buttonNames = {"Library book", "Textbook", "Digital Resource", "eBook - Shelf", "eBook - Local"};
+	String checkOutGroup = "checkOutGroup";
+	String[] checkedOut = {"Available", "Checked out - current", "Checked out - past"};
+	for(int a = 0; a < columnHeadings.length; a++) {
+		bibTable.setText(0, a, columnHeadings[a]);
+	}
+	for(int a = 0; a < buttonNames.length; a++) {
+		bibTable.setWidget(a + 1, 0, new RadioButton(materialGroup, buttonNames[a]));
+	}
+	for(int a = 0; a < checkedOut.length; a++) {
+		bibTable.setWidget(a + 1, 1, new RadioButton(checkOutGroup, checkedOut[a]));
+	}
+	bibTable.setWidget(0, 6, addSetupButton);
+	bookSetupPanel.add(bibTable);
+}
+
+private void createPatronSetupPanel(LayoutPanel patronSetupTable) {
+	FlexTable patronTable = new FlexTable();
+	Button addSetupButton = new Button("Add this!");
+	//TODO read this data in from sql
+	String[] columnHeadings = {"Patron Type", "Login Type", "Permissions"};
+	String patronGroup = "patronTypeGroup";
+	String[] patronTypes = {"Guest", "Patron", "Teacher", "Admin", "Cataloger"};
+	String loginGroup = "loginGroup";
+	String[] loginTypes = {"No Login", "Login"};
+	String[] permissions = {"Checkout Library Materials", "Checkout Textbooks", "Search Using Destiny Quest", "View Fines"};
+	for(int a = 0; a < columnHeadings.length; a++) {
+		patronTable.setText(0, a, columnHeadings[a]);
+	}
+	for(int a = 0; a < patronTypes.length; a++) {
+		patronTable.setWidget(a + 1, 0, new RadioButton(patronGroup, patronTypes[a]));
+	}
+	for(int a = 0; a < loginTypes.length; a++) {
+		patronTable.setWidget(a + 1, 1, new RadioButton(loginGroup, loginTypes[a]));
+	}
+	for(int a = 0; a < permissions.length; a++) {
+		patronTable.setWidget(a + 1, 2, new CheckBox(permissions[a]));
+	}
+	patronTable.setWidget(0, 6, addSetupButton);
+	patronSetupTable.add(patronTable);
+}
+
+private void createSiteSetupPanel(LayoutPanel siteSetupTable) {
+	FlexTable siteTable = new FlexTable();
+	Button addSetupButton = new Button("Add this!");
+	//TODO read this data in from sql
+	String[] columnHeadings = {"Products", "Third Party", "Permissions"};
+	String[] siteTypes = {"Library", "Textbook", "Asset", "Media"};
+	String[] thirdPartyTypes = {"Digital Resources", "One Search", "Fountas and Pinnell", "Reading Program Service", "Standards", "TitlePeek", "WebPath Express"};
+	for(int a = 0; a < columnHeadings.length; a++) {
+		siteTable.setText(0, a, columnHeadings[a]);
+	}
+	for(int a = 0; a < siteTypes.length; a++) {
+		siteTable.setWidget(a + 1, 0, new CheckBox(siteTypes[a]));
+	}
+	for(int a = 0; a < thirdPartyTypes.length; a++) {
+		siteTable.setWidget(a + 1, 1, new CheckBox(thirdPartyTypes[a]));
+	}
+	siteTable.setWidget(0, 6, addSetupButton);
+	siteSetupTable.add(siteTable);
 }
 
 private void buildButtonPanel(final Button sendButton, final Button saveButton,

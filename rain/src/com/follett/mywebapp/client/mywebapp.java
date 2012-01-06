@@ -55,7 +55,7 @@ public class mywebapp implements EntryPoint {
    */
   public void onModuleLoad() {
 
-	    final Button sendButton = new Button("Add Step");
+	    final Button addStepButton = new Button("Add Step");
 	    final Button saveButton = new Button("Save Test");
 	    final Button generateCode = new Button("Generate Code");
 	    final Button addSetup = new Button("Add setup!");
@@ -66,6 +66,7 @@ public class mywebapp implements EntryPoint {
 	    final LayoutPanel patronSetupPanel = new LayoutPanel();
 	    final LayoutPanel siteSetupPanel = new LayoutPanel();
 	    final LayoutPanel buttonPanel = new LayoutPanel();
+	    final LayoutPanel westPanel = new LayoutPanel();
 	    final TabLayoutPanel setupPanel = new TabLayoutPanel(.7, Unit.CM);
 	    final int width = 10;
 	    final int height = 3;
@@ -84,13 +85,13 @@ public class mywebapp implements EntryPoint {
 	    RootLayoutPanel rp = RootLayoutPanel.get();
 	    rp.add(p);
 
-	    buildButtonPanel(sendButton, saveButton, generateCode, addSetup,
-				addStepField, selectedText, buttonPanel, width, height, columnOne,
-				rowOne, columnTwo, rowTwo, columnThree);
-
 	    buildSetupPanel(setupPanel, patronSetupPanel, bookSetupPanel, siteSetupPanel);
 
-	    buildMainPanel(mainPanel, buttonPanel, setupPanel, t, p);
+		buildWestPanel(addStepButton, addStepField, westPanel, t);
+
+		builtStepPanel(saveButton, generateCode, mainPanel);
+
+	    buildMainPanel(mainPanel, buttonPanel, setupPanel, t, p, westPanel);
 
 	    buildStepTable();
 
@@ -107,6 +108,7 @@ public class mywebapp implements EntryPoint {
 					if(selected.getFields() != null) {
 						for(int a = 0; a < selected.getFields().intValue(); a++) {
 							TextBox box = new TextBox();
+							box.setName(selected.getTagID());
 							getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, box);
 							buttonOffset++;
 						}
@@ -118,7 +120,8 @@ public class mywebapp implements EntryPoint {
 					bumpValidationRow();
 					bumpStartKey();
 				} else {
-					selected.addItem(addStepField.getText());
+					ValidationTreeNode node = new ValidationTreeNode("New tagID", selected.getTagID(), addStepField.getText(), Integer.valueOf(0));
+					selected.addItem(node);
 				}
 			}
 
@@ -149,10 +152,10 @@ public class mywebapp implements EntryPoint {
       public void onClick(ClickEvent event) {
     	  if(isEditTree()) {
     		  setEditTree(false);
-    		  sendButton.setText("Add Step");
+    		  addStepButton.setText("Add Step");
     	  }else {
     		  setEditTree(true);
-    		  sendButton.setText("Editing...");
+    		  addStepButton.setText("Editing...");
     	  }
       }
 	/**
@@ -220,7 +223,6 @@ public class mywebapp implements EntryPoint {
 			//THIS NEEDS TO IGNORE THE STEP FIELDS OR IT WILL BREAK!
 			for(int a = 1; a < instructionTable.getRowCount(); a++) {
 				if(a != getSetupRow()) {
-					tagID =	instructionTable.getText(a, 0);
 					//scroll through the boxes to see if they are text fields or buttons
 					int b = 1;
 					Widget w = instructionTable.getWidget(a, b);
@@ -231,7 +233,8 @@ public class mywebapp implements EntryPoint {
 						b++;
 						w = instructionTable.getWidget(a, b);
 					}
-					testCode.addStep(tagID, variables);
+					Button tagName = (Button)w;
+					testCode.addStep(tagName.getText(), variables);
 				}
 			}
 			System.out.print(testCode.toString() + "\n");
@@ -243,7 +246,7 @@ public class mywebapp implements EntryPoint {
 
     // Add a handler to send the name to the server
     MyHandler handler = new MyHandler();
-    sendButton.addClickHandler(handler);
+    addStepButton.addClickHandler(handler);
     addStepField.addKeyUpHandler(handler);
     SetupHandler setupHandler = new SetupHandler();
     addSetup.addClickHandler(setupHandler);
@@ -252,6 +255,30 @@ public class mywebapp implements EntryPoint {
     GenerateCodeHandler cHandler = new GenerateCodeHandler();
     generateCode.addClickHandler(cHandler);
   }
+
+private void builtStepPanel(final Button saveButton, final Button generateCode,
+		final LayoutPanel mainPanel) {
+	mainPanel.add(saveButton);
+	mainPanel.setWidgetLeftWidth(saveButton, 1, Unit.EM, 10, Unit.EM);
+	mainPanel.setWidgetTopHeight(saveButton, 1, Unit.EM, 3, Unit.EM);
+	mainPanel.add(generateCode);
+	mainPanel.setWidgetLeftWidth(generateCode, 12, Unit.EM, 10, Unit.EM);
+	mainPanel.setWidgetTopHeight(generateCode, 1, Unit.EM, 3, Unit.EM);
+	mainPanel.add(getStepFlexTable());
+	mainPanel.setWidgetLeftWidth(getStepFlexTable(), 1, Unit.EM, 100, Unit.EM);
+	mainPanel.setWidgetTopHeight(getStepFlexTable(), 5, Unit.EM, 100, Unit.EM);
+}
+
+private void buildWestPanel(final Button addStepButton,
+		final TextBox addStepField, final LayoutPanel westPanel, Tree t) {
+	westPanel.add(t);
+	westPanel.add(addStepButton);
+	westPanel.setWidgetLeftWidth(addStepButton, 1, Unit.EM, 6, Unit.EM);
+	westPanel.setWidgetBottomHeight(addStepButton, 1, Unit.EM, 3, Unit.EM);
+	westPanel.add(addStepField);
+	westPanel.setWidgetLeftWidth(addStepField, 8, Unit.EM, 10, Unit.EM);
+	westPanel.setWidgetBottomHeight(addStepField, 1, Unit.EM, 3, Unit.EM);
+}
 
 private Tree buildTree() {
 	final Tree t = new Tree();
@@ -288,7 +315,6 @@ private Tree buildTree() {
 			node.addItem(leaf);
 		}
 	}
-
     };
     this.treeBuildingService.getTreeItems(callback);
     return t;
@@ -373,40 +399,11 @@ private void createSiteSetupPanel(LayoutPanel siteSetupTable) {
 	siteSetupTable.add(siteTable);
 }
 
-private void buildButtonPanel(final Button sendButton, final Button saveButton,
-		final Button generateCode, Button addSetup,
-		final TextBox addStepField, TextBox selectedLabel, final LayoutPanel buttonPanel,
-		final int width, final int height, final int columnOne,
-		final int rowOne, final int columnTwo, final int rowTwo, int columnThree) {
-	//TODO build this into the xml
-	buttonPanel.add(sendButton);
-	buttonPanel.setWidgetLeftWidth(sendButton, columnOne, Unit.EM, width, Unit.EM);
-	buttonPanel.setWidgetTopHeight(sendButton, rowOne, Unit.EM, height, Unit.EM);
-	buttonPanel.add(addStepField);
-	buttonPanel.setWidgetLeftWidth(addStepField, columnOne, Unit.EM, width, Unit.EM);
-	buttonPanel.setWidgetTopHeight(addStepField, rowTwo, Unit.EM, height, Unit.EM);
-	buttonPanel.add(saveButton);
-	buttonPanel.setWidgetLeftWidth(saveButton, columnTwo, Unit.EM, width, Unit.EM);
-	buttonPanel.setWidgetTopHeight(saveButton, rowOne, Unit.EM, height, Unit.EM);
-	buttonPanel.add(generateCode);
-	buttonPanel.setWidgetLeftWidth(generateCode, columnTwo, Unit.EM, width, Unit.EM);
-	buttonPanel.setWidgetTopHeight(generateCode, rowTwo, Unit.EM, height, Unit.EM);
-	buttonPanel.add(addSetup);
-	buttonPanel.setWidgetLeftWidth(addSetup, columnThree, Unit.EM, width, Unit.EM);
-	buttonPanel.setWidgetTopHeight(addSetup, rowOne, Unit.EM, height, Unit.EM);
-	buttonPanel.add(selectedLabel);
-	buttonPanel.setWidgetLeftWidth(selectedLabel, columnThree, Unit.EM, width, Unit.EM);
-	buttonPanel.setWidgetTopHeight(selectedLabel, rowTwo, Unit.EM, height, Unit.EM);
-
-}
-
 private void buildMainPanel(final LayoutPanel mainPanel, final LayoutPanel buttonPanel,
 		final TabLayoutPanel setupPanel, final Tree t,
-		SplitLayoutPanel p) {
-	mainPanel.add(getStepFlexTable());
-	p.addWest(t, 256);
+		SplitLayoutPanel p, LayoutPanel westPanel) {
+	p.addWest(westPanel, 256);
 	p.addNorth(setupPanel, 256);
-	p.addNorth(buttonPanel, 100);
 	p.add(mainPanel);
 }
 

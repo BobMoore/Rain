@@ -5,10 +5,9 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
 
-import com.follett.mywebapp.util.ValidationTreeDataItem;
+import com.follett.mywebapp.util.SetupDataItem;
+import com.follett.mywebapp.util.TableData;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
@@ -23,36 +22,34 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
    * Implement the connection to the server and gather the necessary data
    * */
   @Override
-  public HashMap<String, ArrayList<String>> getTreeItems() {
-	  HashMap<String, ArrayList<String>> returnable = new HashMap<String, ArrayList<String>>();
+  public SetupDataItem getSetupData() {
+	  SetupDataItem returnable = new SetupDataItem();
 	  try {
-		  //build this sql based on the calling method, IE send the perticular tab to get the proper return
-
+		  //send everything!
 		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
-		  // TODO get tree items and build them into the tree
+
 		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
 		  "databaseName=Rain;user=sa;password=stuffy;";
 		  Connection conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
-		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.TreeItems ORDER BY parentTagID");
+		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.SiteSetup ORDER BY tab");
+		  String column;
 		  String tagID;
-		  String parentTagID;
-		  String description;
+		  boolean checkbox;
+		  String label;
 		  Integer fields;
+		  String tab;
 		  while(rs.next()) {
+			  column = rs.getString("columnHeading");
 			  tagID = rs.getString("tagID");
-			  parentTagID = rs.getString("parentTagID");
-			  description = rs.getString("description");
-			  fields = Integer.valueOf(rs.getInt("fields"));
-			  ValidationTreeDataItem item = new ValidationTreeDataItem(tagID, parentTagID, description, fields);
-			  ArrayList<String> currentList;
-			  if(returnable.containsKey(parentTagID)) {
-				  currentList = returnable.get(parentTagID);
-			  } else {
-				  currentList = new ArrayList<String>();
-			  }
-//			  currentList.add(item);
-			  returnable.put(parentTagID, currentList);
+			  checkbox = rs.getBoolean("checkbox");
+			  label = rs.getString("label");
+			  fields = Integer.valueOf(rs.getInt("textfields"));
+			  tab = rs.getString("tab");
+			  TableData data = new TableData(tagID, label, checkbox, fields);
+			  returnable.addTab(tab);
+			  returnable.addColumnToTab(tab, column);
+			  returnable.addDataToColumn(column, data);
 		  }
 		  conn.close();
 	  } catch (SQLException e) {

@@ -8,7 +8,9 @@ import com.follett.mywebapp.server.SetupBuilderServiceAsync;
 import com.follett.mywebapp.server.TreeBuilderService;
 import com.follett.mywebapp.server.TreeBuilderServiceAsync;
 import com.follett.mywebapp.util.CodeContainer;
+import com.follett.mywebapp.util.SetupDataItem;
 import com.follett.mywebapp.util.StepHolder;
+import com.follett.mywebapp.util.TableData;
 import com.follett.mywebapp.util.ValidationTreeDataItem;
 import com.follett.mywebapp.util.ValidationTreeNode;
 import com.google.gwt.core.client.EntryPoint;
@@ -52,6 +54,7 @@ public class mywebapp implements EntryPoint {
 	private int startKey = 10;
 
 	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
+	private SetupBuilderServiceAsync setupBuildingService = GWT.create(SetupBuilderService.class);
 
   /**
    * This is the entry point method.
@@ -70,7 +73,7 @@ public class mywebapp implements EntryPoint {
 	    final LayoutPanel siteSetupPanel = new LayoutPanel();
 	    final LayoutPanel buttonPanel = new LayoutPanel();
 	    final LayoutPanel westPanel = new LayoutPanel();
-	    final TabLayoutPanel setupPanel = new TabLayoutPanel(.7, Unit.CM);
+	    final TabLayoutPanel setupPanel = buildSetupPanel(patronSetupPanel, bookSetupPanel, siteSetupPanel);
 	    Tree t = new Tree();
 	    setStepFlexTable(new FlexTable());
 
@@ -81,7 +84,7 @@ public class mywebapp implements EntryPoint {
 	    RootLayoutPanel rp = RootLayoutPanel.get();
 	    rp.add(p);
 
-	    buildSetupPanel(setupPanel, patronSetupPanel, bookSetupPanel, siteSetupPanel);
+
 
 		buildValidationTreePanel(addStepButton, addStepField, westPanel, t);
 
@@ -316,165 +319,106 @@ private Tree buildTree() {
     return t;
 }
 
-private void buildSetupPanel(final TabLayoutPanel setupPanel, LayoutPanel patronSetupPanel, LayoutPanel bookSetupPanel, LayoutPanel siteSetupPanel) {
+private TabLayoutPanel buildSetupPanel(LayoutPanel patronSetupPanel, LayoutPanel bookSetupPanel, LayoutPanel siteSetupPanel) {
+	final TabLayoutPanel setupPanel = new TabLayoutPanel(.7, Unit.CM);
+
 	//TODO add in the items for the tabs and check boxes
 	//possibly allow for added patrons to flag into the bib box to allow for selecting them to checkout to?
-	createBookSetupPanel(bookSetupPanel);
-	setupPanel.add(bookSetupPanel, "Bibs");
-	createPatronSetupPanel(patronSetupPanel);
-	setupPanel.add(patronSetupPanel,"Patrons");
-	createSiteSetupPanel(siteSetupPanel);
-	setupPanel.add(siteSetupPanel,"Sites");
-}
 
-private void createBookSetupPanel(LayoutPanel bookSetupPanel) {
-	final FlexTable bibTable = new FlexTable();
-	Button addSetupButton = new Button("Add this!");
-	//TODO read this data in from sql
-	String[] columnHeadings = {"Material Type", "Checked out?"};
-	String materialGroup = "materialTypeGroup";
-	String[] buttonNames = {"Library book", "Textbook", "Digital Resource", "eBook - Shelf", "eBook - Local"};
-	String checkOutGroup = "checkOutGroup";
-	String[] checkedOut = {"Available", "Checked out - current", "Checked out - past"};
-	for(int a = 0; a < columnHeadings.length; a++) {
-		bibTable.setText(0, a, columnHeadings[a]);
-	}
-	for(int a = 0; a < buttonNames.length; a++) {
-		bibTable.setWidget(a + 1, 0, new RadioButton(materialGroup, buttonNames[a]));
-	}
-	for(int a = 0; a < checkedOut.length; a++) {
-		bibTable.setWidget(a + 1, 1, new RadioButton(checkOutGroup, checkedOut[a]));
-	}
-	bibTable.setWidget(0, 6, addSetupButton);
-	bookSetupPanel.add(bibTable);
-}
+	// Initialize the service proxy.
+    if (this.setupBuildingService == null) {
+    	this.setupBuildingService = GWT.create(SetupBuilderService.class);
+    }
 
-private void createPatronSetupPanel(LayoutPanel patronSetupTable) {
-	FlexTable patronTable = new FlexTable();
-	Button addSetupButton = new Button("Add this!");
-	//TODO read this data in from sql
-	String[] columnHeadings = {"Patron Type", "Login Type", "Permissions"};
-	String patronGroup = "patronTypeGroup";
-	String[] patronTypes = {"Guest", "Patron", "Teacher", "Admin", "Cataloger"};
-	String loginGroup = "loginGroup";
-	String[] loginTypes = {"No Login", "Login"};
-	String[] permissions = {"Checkout Library Materials", "Checkout Textbooks", "Search Using Destiny Quest", "View Fines"};
-	for(int a = 0; a < columnHeadings.length; a++) {
-		patronTable.setText(0, a, columnHeadings[a]);
-	}
-	for(int a = 0; a < patronTypes.length; a++) {
-		patronTable.setWidget(a + 1, 0, new RadioButton(patronGroup, patronTypes[a]));
-	}
-	for(int a = 0; a < loginTypes.length; a++) {
-		patronTable.setWidget(a + 1, 1, new RadioButton(loginGroup, loginTypes[a]));
-	}
-	for(int a = 0; a < permissions.length; a++) {
-		patronTable.setWidget(a + 1, 2, new CheckBox(permissions[a]));
-	}
-	patronTable.setWidget(0, 6, addSetupButton);
-	patronSetupTable.add(patronTable);
-}
+    // Set up the callback object.
+    AsyncCallback<SetupDataItem> callback = new AsyncCallback<SetupDataItem>() {
+      public void onFailure(Throwable caught) {
+      }
 
-private void createSiteSetupPanel(LayoutPanel siteSetupTable) {
-	final FlexTable siteTable = new FlexTable();
-	Button addSetupButton = new Button("Add this!");
-	//TODO read this data in from sql
-	String[] columnHeadings = {"Products", "Third Party", "Permissions"};
-	String[] siteTypes = {"Library", "Textbook", "Asset", "Media"};
-	String[] thirdPartyTypes = {"Digital Resources", "One Search", "Fountas and Pinnell", "Reading Program Service", "Standards", "TitlePeek", "WebPath Express"};
-	for(int a = 0; a < columnHeadings.length; a++) {
-		siteTable.setText(0, a, columnHeadings[a]);
-	}
-	for(int a = 0; a < siteTypes.length; a++) {
-		siteTable.setWidget(a + 1, 0, new CheckBox(siteTypes[a]));
-	}
-	for(int a = 0; a < thirdPartyTypes.length; a++) {
-		siteTable.setWidget(a + 1, 1, new CheckBox(thirdPartyTypes[a]));
-	}
-	addSetupButton.addClickHandler(new ClickHandler() {
+      @Override
+      public void onSuccess(SetupDataItem result) {
+    	  ArrayList<String> tabList = result.getTabs();
+    	  for (String tab : tabList) {
+    		  LayoutPanel panel = new LayoutPanel();
+    		  buildPanel(panel, result.getColumnsOnTab(tab), result.getData());
+    		  setupPanel.add(panel, tab);
+    	  }
+      }
 
-		private SetupBuilderServiceAsync setupBuildingService = GWT.create(SetupBuilderService.class);
+      private void buildPanel(LayoutPanel panel, ArrayList<String> columns, HashMap<String,ArrayList<TableData>> tableData) {
+    	  final ArrayList<Object> boxesAndButtons = new ArrayList<Object>();
+    	  final FlexTable table = new FlexTable();
+    	  ArrayList<TableData> columnData;
+    	  int a = 0;
+    	  for (String columnHeader : columns) {
+    		  table.setText(0, a, columnHeader);
+    		  columnData = tableData.get(columnHeader);
+    		  int b = 1;
+    		  for (TableData data : columnData) {
+    			  if(data.isCheckbox()) {
+    				  CheckBox box = new CheckBox(data.getLabel());
+    				  boxesAndButtons.add(box);
+    				  table.setWidget(b, a, box);
+    			  }else {
+    				  RadioButton button = new RadioButton(columnHeader, data.getLabel());
+    				  boxesAndButtons.add(button);
+    				  table.setWidget(b, a, button);
+    			  }
+    			  b++;
+    		  }
+    		  a++;
+    	  }
 
-		@Override
-		public void onClick(ClickEvent event) {
-			//Empty out the warning message
-			siteTable.setText(1, 6, "");
+    	  class AddSetupHandler implements ClickHandler {
 
-			//Scroll through all of the associated checkboxes and find their values.
-			//Need to have a more dynamic creation of the steps. I need to have a hashmap or something that can create these lists
-			//Maybe a hashmap <String, ArrayList<String>>?
-			//Then converted to <String, ArrayList<RadioButton>>?
-			//This would make it a much more dynamic list. Would I need a list of keys? It would certainly make it more efficient to setting all of the titles.
-			//I suppose I do that anyway, with column headings
-			//What about checkboxes? they could be either or. So how do I have one data object to contain them all? use the 'instanceof'? That wouldn't
-			//handle the two inside of one mapping. I guess I could make them objects... then use the 'instanceof'
+    		  ArrayList<Object> items;
 
-			//so if I did that, I would have
+    		  public AddSetupHandler(ArrayList<Object> items) {
+    			  this.items = items;
+    		  }
 
-			//HashMap <ColumnHeading, ArrayList<CustomType>>
-			//customType will have tagID, # of textbox fields, names of textbox fields,
-			//scroll through the map. Grab column heading. hold onto it. If the elements are radion buttons, create them and create the key mapping to the array list of String, <object>
-			//otherwise create the checkboxes.
-			//so the hashmap passed from the database would need to have the first element dictating radio button or checkbox
-			//then there would be one data object. I would have to overload the buttons and boxes to have their idTags and amount of textboxes on them.
-			//where are the idTags coming from?
-			//where are the textbox fields getting set? do I want to have to query for that?
+    		  @Override
+    		  public void onClick(ClickEvent event) {
 
-
-			//Add the step to the setup panel
-
-			//The overloaded button needs to be changed to an array list for the steps...
-			//HashMap <int order, String tagID>
-			//scroll through in a while loop. starting with 0, if it is in the button tag, then just stick in the id. If it isnt in the mapping then grab the first text box set.
-
-			// Initialize the service proxy.
-		    if (this.setupBuildingService == null) {
-		    	this.setupBuildingService = GWT.create(SetupBuilderService.class);
-		    }
-
-		    // Set up the callback object.
-		    AsyncCallback<HashMap<String, ArrayList<String>>> callback = new AsyncCallback<HashMap<String, ArrayList<String>>>() {
-		      public void onFailure(Throwable caught) {
-		      }
-
-			@Override
-			public void onSuccess(HashMap<String, ArrayList<String>> result) {
-
-			}
-
-			public void addChildrenToTree(ValidationTreeNode node, HashMap<String, ArrayList<ValidationTreeDataItem>> result) {
-				ArrayList<ValidationTreeDataItem> branches = result.get(node.getTagID());
-				for (ValidationTreeDataItem branch : branches) {
-					ValidationTreeNode leaf = new ValidationTreeNode(branch);
-					if(result.containsKey(leaf.getTagID())) {
-						addChildrenToTree(leaf, result);
-					}
-					node.addItem(leaf);
-				}
-			}
-		    };
-
-//			getStepFlexTable().setText(getValidationRow(), 0, selected.getText());
-//			StepHolder removeStepButton = new StepHolder("x", selected.getTagID());
-//			int buttonOffset = 0;
-//			if(selected.getFields() != null) {
-//				for(int a = 0; a < selected.getFields().intValue(); a++) {
-//					TextBox box = new TextBox();
-//					getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, box);
-//					buttonOffset++;
-//				}
-//			}
-//			removeStepButton.addClickHandler(new removeStepHandler(getStartKey() + ""));
-//			getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, removeStepButton);
-//			addValidationStep(getValidationRow(),selected.getText());
-//			addIdentifierKey(getValidationRow(), getStartKey() + "");
-//			bumpValidationRow();
-//			bumpStartKey();
-		}
-	});
-
-	siteTable.setWidget(0, 6, addSetupButton);
-	siteSetupTable.add(siteTable);
+    			  //scroll through the objects and grab which ones I need
+    			  int row = 0;
+    			  String label;
+    			  for (Object obj : this.items) {
+    				  if(obj instanceof CheckBox) {
+    					  CheckBox box = (CheckBox)obj;
+    					  label = box.getText();
+    				  }
+    				  if(obj instanceof RadioButton) {
+    					  RadioButton button = (RadioButton)obj;
+    					  label = button.getText();
+    				  }
+    				  getStepFlexTable().setText(getValidationRow(), 0, label);
+    			  }
+//    			  StepHolder removeStepButton = new StepHolder("x", selected.getTagID());
+//    			  int buttonOffset = 0;
+//    			  if(selected.getFields() != null) {
+//    				  for(int a = 0; a < selected.getFields().intValue(); a++) {
+//    					  TextBox box = new TextBox();
+//    					  getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, box);
+//    					  buttonOffset++;
+//    				  }
+//    			  }
+//    			  removeStepButton.addClickHandler(new removeStepHandler(getStartKey() + ""));
+//    			  getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, removeStepButton);
+//    			  addValidationStep(getValidationRow(),selected.getText());
+//    			  addIdentifierKey(getValidationRow(), getStartKey() + "");
+//    			  bumpValidationRow();
+//    			  bumpStartKey();
+    		  }
+    	  }
+    	  Button addSetupButton = new Button("Add this!");
+    	  addSetupButton.addClickHandler(new AddSetupHandler());
+    	  table.setWidget(0, a, addSetupButton);
+    	  panel.add(table);
+      }
+    };
+    this.setupBuildingService.getSetupData(callback);
+	return setupPanel;
 }
 
 private void buildMainPanel(final LayoutPanel mainPanel, final LayoutPanel buttonPanel,

@@ -15,7 +15,17 @@
     <servlet-name>TreeBuilderServiceImpl</servlet-name>
     <url-pattern>/mywebapp/treeBuilder</url-pattern>
   </servlet-mapping>
+
+  <servlet>
+    <servlet-name>SetupBuilderServiceImpl</servlet-name>
+    <servlet-class>com.follett.mywebapp.server.SetupBuilderServiceImpl</servlet-class>
+  </servlet>
   
+  <servlet-mapping>
+    <servlet-name>SetupBuilderServiceImpl</servlet-name>
+    <url-pattern>/mywebapp/setupBuilder</url-pattern>
+  </servlet-mapping>
+    
   <!-- Default page to serve -->
   <welcome-file-list>
     <welcome-file>mywebapp.html</welcome-file>

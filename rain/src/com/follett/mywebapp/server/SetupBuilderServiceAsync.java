@@ -1,12 +1,10 @@
 package com.follett.mywebapp.server;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
+import com.follett.mywebapp.util.SetupDataItem;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface SetupBuilderServiceAsync {
 
-  void getTreeItems(AsyncCallback<HashMap<String, ArrayList<String>>> callback);
+  void getSetupData(AsyncCallback<SetupDataItem> callback);
 
 }

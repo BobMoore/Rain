@@ -1,14 +1,13 @@
 package com.follett.mywebapp.util;
 
-import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.Button;
 
-public class StepHolder extends Composite {
+public class StepHolder extends Button {
 
 	private String tagID;
 
-	public StepHolder(String description, String tagID) {
-		initWidget(this);
-		this.setTitle(description);
+	public StepHolder(String text, String tagID) {
+		super(text);
 		this.tagID = tagID;
 	}
 

@@ -11,6 +11,7 @@ import com.follett.mywebapp.util.CodeContainer;
 import com.follett.mywebapp.util.SetupDataItem;
 import com.follett.mywebapp.util.StepHolder;
 import com.follett.mywebapp.util.TableData;
+import com.follett.mywebapp.util.TextboxIDHolder;
 import com.follett.mywebapp.util.ValidationTreeDataItem;
 import com.follett.mywebapp.util.ValidationTreeNode;
 import com.google.gwt.core.client.EntryPoint;
@@ -61,19 +62,15 @@ public class mywebapp implements EntryPoint {
    */
   public void onModuleLoad() {
 
+	  	final TabLayoutPanel toolPanel = new TabLayoutPanel(.7, Unit.CM);
 	    final Button addStepButton = new Button("Add Step");
 	    final Button saveButton = new Button("Save Test");
 	    final Button generateCode = new Button("Generate Code");
-	    final Button addSetup = new Button("Add setup!");
 	    final TextBox addStepField = new TextBox();
-	    final TextBox selectedText = new TextBox();
 	    final LayoutPanel mainPanel = new LayoutPanel();
-	    final LayoutPanel bookSetupPanel = new LayoutPanel();
-	    final LayoutPanel patronSetupPanel = new LayoutPanel();
-	    final LayoutPanel siteSetupPanel = new LayoutPanel();
 	    final LayoutPanel buttonPanel = new LayoutPanel();
 	    final LayoutPanel westPanel = new LayoutPanel();
-	    final TabLayoutPanel setupPanel = buildSetupPanel(patronSetupPanel, bookSetupPanel, siteSetupPanel);
+	    final TabLayoutPanel setupPanel = buildSetupPanel();
 	    Tree t = new Tree();
 	    setStepFlexTable(new FlexTable());
 
@@ -81,8 +78,10 @@ public class mywebapp implements EntryPoint {
 
 	    SplitLayoutPanel p = new SplitLayoutPanel();
 
+	    toolPanel.add(p, "Test Developement");
+
 	    RootLayoutPanel rp = RootLayoutPanel.get();
-	    rp.add(p);
+	    rp.add(toolPanel);
 
 
 
@@ -106,12 +105,12 @@ public class mywebapp implements EntryPoint {
 					int buttonOffset = 0;
 					if(selected.getFields() != null) {
 						for(int a = 0; a < selected.getFields().intValue(); a++) {
-							TextBox box = new TextBox();
+							TextboxIDHolder box = new TextboxIDHolder(selected.getTagID());
 							getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, box);
 							buttonOffset++;
 						}
 					}
-					removeStepButton.addClickHandler(new removeStepHandler(getStartKey() + ""));
+					removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + ""));
 					getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, removeStepButton);
 					addValidationStep(getValidationRow(),selected.getText());
 					addIdentifierKey(getValidationRow(), getStartKey() + "");
@@ -121,22 +120,6 @@ public class mywebapp implements EntryPoint {
 					//TODO add in generation of new tagID
 					ValidationTreeNode node = new ValidationTreeNode("New tagID", selected.getTagID(), addStepField.getText(), Integer.valueOf(0));
 					selected.addItem(node);
-				}
-			}
-
-			class removeStepHandler implements ClickHandler {
-				String myKey;
-
-				public removeStepHandler(String newKey) {
-					this.myKey = newKey;
-				}
-
-				public void onClick(ClickEvent event) {
-					int removedIndex = getIdentifierKey().indexOf(this.myKey);
-					removeIndexKey(removedIndex);
-					removeIndexStep(removedIndex);
-					removeStepFlexTableRow(removedIndex);
-					reduceValidationRow();
 				}
 			}
 	    }
@@ -177,38 +160,6 @@ public class mywebapp implements EntryPoint {
       }
     }
 
-    class SetupHandler implements ClickHandler {
-
-		@Override
-		public void onClick(ClickEvent event) {
-			getStepFlexTable().insertRow(getSetupRow());
-			getStepFlexTable().setText(getSetupRow(), 0, selectedText.getText());
-			Button removeStepButton = new Button("x");
-			removeStepButton.addClickHandler(new removeStepHandler(getStartKey() + ""));
-			getStepFlexTable().setWidget(getSetupRow(), 1, removeStepButton);
-			addValidationStep(getSetupRow(), selectedText.getText());
-			addIdentifierKey(getSetupRow(), getStartKey() + "");
-			bumpSetupRow();
-			bumpStartKey();
-		}
-
-		class removeStepHandler implements ClickHandler {
-			String myKey;
-
-			public removeStepHandler(String newKey) {
-				this.myKey = newKey;
-			}
-
-			public void onClick(ClickEvent event) {
-				int removedIndex = getIdentifierKey().indexOf(this.myKey);
-				removeIndexKey(removedIndex);
-				removeIndexStep(removedIndex);
-				removeStepFlexTableRow(removedIndex);
-				reduceSetupRow();
-			}
-		}
-    }
-
     class GenerateCodeHandler implements ClickHandler {
 
 		@Override
@@ -216,24 +167,44 @@ public class mywebapp implements EntryPoint {
 			// TODO Generate the code!
 			//step one get a list of tags and variables to be sent
 			CodeContainer testCode = new CodeContainer();
-			String tagID;
-			ArrayList<String> variables;
+			String id = "";
+			HashMap<String, ArrayList<String>> textToVariables = new HashMap<String, ArrayList<String>>();
+			ArrayList<String> variables = new ArrayList<String>();
 			FlexTable instructionTable = getStepFlexTable();
-			//THIS NEEDS TO IGNORE THE STEP FIELDS OR IT WILL BREAK!
 			for(int a = 1; a < instructionTable.getRowCount(); a++) {
 				if(a != getSetupRow()) {
-					//scroll through the boxes to see if they are text fields or buttons
-					int b = 1;
+					int b = 0;
 					Widget w = instructionTable.getWidget(a, b);
-					variables = new ArrayList<String>();
 					while(!(w instanceof StepHolder)) {
-						TextBox box = (TextBox)w;
-						variables.add(box.getText());
-						b++;
-						w = instructionTable.getWidget(a, b);
+						if(instructionTable.getWidget(a, b) == null) {
+							b++;
+							w = instructionTable.getWidget(a, b);
+						} else {
+							variables = new ArrayList<String>();
+							while(w instanceof TextboxIDHolder) {
+								TextboxIDHolder box = (TextboxIDHolder)w;
+								variables.add(box.getText());
+								id = box.getTagID();
+								b++;
+								w = instructionTable.getWidget(a, b);
+							}
+							textToVariables.put(id, variables);
+						}
 					}
 					StepHolder tagName = (StepHolder)w;
-					testCode.addStep(tagName.getTagID(), variables);
+					if(tagName.getTagID() != null) {
+						testCode.addStep(tagName.getTagID(), variables);
+					}else if (tagName.getMultiTags() != null) {
+						ArrayList<String> currentList;
+						ArrayList<String> tags = tagName.getMultiTags();
+						for (String tag : tags) {
+							currentList = new ArrayList<String>();
+							if(textToVariables.containsKey(tag)) {
+								currentList = textToVariables.get(tag);
+							}
+							testCode.addStep(tag, currentList);
+						}
+					}
 				}
 			}
 			System.out.print(testCode.toString() + "\n");
@@ -247,8 +218,6 @@ public class mywebapp implements EntryPoint {
     MyHandler handler = new MyHandler();
     addStepButton.addClickHandler(handler);
     addStepField.addKeyUpHandler(handler);
-    SetupHandler setupHandler = new SetupHandler();
-    addSetup.addClickHandler(setupHandler);
     TreeHandler tHandler = new TreeHandler();
     t.addSelectionHandler(tHandler);
     GenerateCodeHandler cHandler = new GenerateCodeHandler();
@@ -319,7 +288,7 @@ private Tree buildTree() {
     return t;
 }
 
-private TabLayoutPanel buildSetupPanel(LayoutPanel patronSetupPanel, LayoutPanel bookSetupPanel, LayoutPanel siteSetupPanel) {
+private TabLayoutPanel buildSetupPanel() {
 	final TabLayoutPanel setupPanel = new TabLayoutPanel(.7, Unit.CM);
 
 	//TODO add in the items for the tabs and check boxes
@@ -347,6 +316,7 @@ private TabLayoutPanel buildSetupPanel(LayoutPanel patronSetupPanel, LayoutPanel
 
       private void buildPanel(LayoutPanel panel, ArrayList<String> columns, HashMap<String,ArrayList<TableData>> tableData) {
     	  final ArrayList<Object> boxesAndButtons = new ArrayList<Object>();
+    	  final HashMap<String, TableData> allData = new HashMap<String, TableData>();
     	  final FlexTable table = new FlexTable();
     	  ArrayList<TableData> columnData;
     	  int a = 0;
@@ -364,6 +334,7 @@ private TabLayoutPanel buildSetupPanel(LayoutPanel patronSetupPanel, LayoutPanel
     				  boxesAndButtons.add(button);
     				  table.setWidget(b, a, button);
     			  }
+    			  allData.put(data.getLabel(), data);
     			  b++;
     		  }
     		  a++;
@@ -372,47 +343,69 @@ private TabLayoutPanel buildSetupPanel(LayoutPanel patronSetupPanel, LayoutPanel
     	  class AddSetupHandler implements ClickHandler {
 
     		  ArrayList<Object> items;
+    		  HashMap<String, TableData> fullData;
 
-    		  public AddSetupHandler(ArrayList<Object> items) {
+    		  public AddSetupHandler(ArrayList<Object> items, HashMap<String, TableData> data) {
     			  this.items = items;
+    			  this.fullData = data;
     		  }
 
     		  @Override
     		  public void onClick(ClickEvent event) {
 
     			  //scroll through the objects and grab which ones I need
-    			  int row = 0;
-    			  String label;
+    			  int column = 0;
+    			  String label = "";
+    			  Boolean checked = Boolean.FALSE;
+    			  boolean rowBump = false;
+    			  StepHolder removeStepButton = new StepHolder("x");
     			  for (Object obj : this.items) {
     				  if(obj instanceof CheckBox) {
     					  CheckBox box = (CheckBox)obj;
     					  label = box.getText();
+    					  checked = box.getValue();
     				  }
     				  if(obj instanceof RadioButton) {
     					  RadioButton button = (RadioButton)obj;
     					  label = button.getText();
+    					  checked = button.getValue();
     				  }
-    				  getStepFlexTable().setText(getValidationRow(), 0, label);
+    				  if(checked.booleanValue()) {
+    					  if(!rowBump) {
+    						  getStepFlexTable().insertRow(getSetupRow());
+    						  rowBump = true;
+    					  }
+    					  getStepFlexTable().setText(getSetupRow(), column, label);
+    					  column++;
+    					  if(this.fullData.containsKey(label)) {
+    						  TableData data = this.fullData.get(label);
+    						  if(data.getTextfields() != null) {
+    							  ArrayList<String> descriptions = data.getDescriptions();
+    							  for(int c = 0; c < data.getTextfields().intValue(); c++) {
+    								  TextboxIDHolder box = new TextboxIDHolder(data.getTagID());
+    								  if(c<descriptions.size()) {
+    									  box.setTitle(descriptions.get(c));
+    								  }
+    								  getStepFlexTable().setWidget(getSetupRow(), column, box);
+    								  column++;
+    							  }
+    						  }
+    						  removeStepButton.addTagID(data.getTagID());
+    					  }
+    				  }
     			  }
-//    			  StepHolder removeStepButton = new StepHolder("x", selected.getTagID());
-//    			  int buttonOffset = 0;
-//    			  if(selected.getFields() != null) {
-//    				  for(int a = 0; a < selected.getFields().intValue(); a++) {
-//    					  TextBox box = new TextBox();
-//    					  getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, box);
-//    					  buttonOffset++;
-//    				  }
-//    			  }
-//    			  removeStepButton.addClickHandler(new removeStepHandler(getStartKey() + ""));
-//    			  getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, removeStepButton);
-//    			  addValidationStep(getValidationRow(),selected.getText());
-//    			  addIdentifierKey(getValidationRow(), getStartKey() + "");
-//    			  bumpValidationRow();
-//    			  bumpStartKey();
+    			  if(rowBump) {
+    				  removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + "", 0));
+    				  getStepFlexTable().setWidget(getSetupRow(), column, removeStepButton);
+    				  addValidationStep(getSetupRow(),label);
+    				  addIdentifierKey(getSetupRow(), getStartKey() + "");
+    				  bumpSetupRow();
+    				  bumpStartKey();
+    			  }
     		  }
     	  }
     	  Button addSetupButton = new Button("Add this!");
-    	  addSetupButton.addClickHandler(new AddSetupHandler());
+    	  addSetupButton.addClickHandler(new AddSetupHandler(boxesAndButtons, allData));
     	  table.setWidget(0, a, addSetupButton);
     	  panel.add(table);
       }
@@ -436,6 +429,33 @@ private void buildStepTable() {
 	getStepFlexTable().setText(1, 0, "Validation Steps");
 	this.validationSteps.add("Validation Steps");
 	this.identifierKey.add("Validation Steps");
+}
+
+class RemoveStepHandler implements ClickHandler {
+	String myKey;
+	int setupOrValidation;
+
+	public RemoveStepHandler(String newKey) {
+		this.myKey = newKey;
+		this.setupOrValidation = 1;
+	}
+
+	public RemoveStepHandler(String newKey, int zeroForSetup) {
+		this.myKey = newKey;
+		this.setupOrValidation = zeroForSetup;
+	}
+
+	public void onClick(ClickEvent event) {
+		int removedIndex = getIdentifierKey().indexOf(this.myKey);
+		removeIndexKey(removedIndex);
+		removeIndexStep(removedIndex);
+		removeStepFlexTableRow(removedIndex);
+		if(this.setupOrValidation == 1) {
+			reduceValidationRow();
+		}else{
+			reduceSetupRow();
+		}
+	}
 }
 
 public void setEditTree(boolean editTree) {

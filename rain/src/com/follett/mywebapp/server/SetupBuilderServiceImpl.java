@@ -32,13 +32,14 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 		  "databaseName=Rain;user=sa;password=stuffy;";
 		  Connection conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
-		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.SiteSetup ORDER BY tab");
+		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.Setup ORDER BY tab");
 		  String column;
 		  String tagID;
 		  boolean checkbox;
 		  String label;
 		  Integer fields;
 		  String tab;
+		  String fieldDescriptions;
 		  while(rs.next()) {
 			  column = rs.getString("columnHeading");
 			  tagID = rs.getString("tagID");
@@ -46,7 +47,9 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 			  label = rs.getString("label");
 			  fields = Integer.valueOf(rs.getInt("textfields"));
 			  tab = rs.getString("tab");
+			  fieldDescriptions = rs.getString("fieldDescriptions");
 			  TableData data = new TableData(tagID, label, checkbox, fields);
+			  data.addDescriptions(fieldDescriptions);
 			  returnable.addTab(tab);
 			  returnable.addColumnToTab(tab, column);
 			  returnable.addDataToColumn(column, data);

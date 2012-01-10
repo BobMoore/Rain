@@ -12,11 +12,13 @@ public class SetupDataItem implements Serializable{
 	private ArrayList<String> tabs;
 	private HashMap<String, ArrayList<String>> columnsOnTab;
 	private HashMap<String, ArrayList<TableData>> dataInColumn;
+	private HashMap<String, ArrayList<String>> fieldDescriptionsForID;
 
 	public SetupDataItem() {
 		this.tabs = new ArrayList<String>();
 		this.columnsOnTab = new HashMap<String, ArrayList<String>>();
 		this.dataInColumn = new HashMap<String, ArrayList<TableData>>();
+		this.fieldDescriptionsForID = new HashMap<String, ArrayList<String>>();
 	}
 
 	public void addTab(String newTab) {
@@ -65,5 +67,11 @@ public class SetupDataItem implements Serializable{
 			currentList.add(data);
 		}
 		this.dataInColumn.put(column, currentList);
+	}
+
+
+
+	public HashMap<String, ArrayList<String>> getFieldDescriptionsForID() {
+		return this.fieldDescriptionsForID;
 	}
 }

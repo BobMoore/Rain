@@ -78,4 +78,18 @@ public class ValidationTreeDataItem implements Serializable{
 	public ArrayList<String> getDescriptions() {
 		return this.descriptions;
 	}
+
+	public String getDescriptionsToString() {
+		String returnable = "";
+		boolean first = true;
+		for (String item : this.descriptions) {
+			if(first) {
+				returnable += item;
+				first = false;
+			}else {
+				returnable += ", " + item;
+			}
+		}
+		return returnable;
+	}
 }

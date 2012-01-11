@@ -9,5 +9,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public interface TreeBuilderServiceAsync {
 
   void getTreeItems(AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>> callback);
+  void saveTreeItems(ArrayList<ValidationTreeDataItem> nodes,
+		AsyncCallback<Boolean> callback);
 
 }

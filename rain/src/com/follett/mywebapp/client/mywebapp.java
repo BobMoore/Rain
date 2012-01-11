@@ -69,16 +69,16 @@ public class mywebapp implements EntryPoint {
 	    final ScrollPanel flexPanel = new ScrollPanel();
 	    final TabLayoutPanel setupPanel = buildSetupPanel();
 	    final SplitLayoutPanel stepBuildingPanel = buildStepSetup();
+	    final SplitLayoutPanel setupBuildingPanel = buildSetupSetup();
 	    final SplitLayoutPanel testDevelopementPanel = new SplitLayoutPanel();
 	    Tree t = new Tree();
 	    setStepFlexTable(new FlexTable());
 
 	    t = buildTree();
 
-
-
 	    toolPanel.add(testDevelopementPanel, "Test Developement");
-	    toolPanel.add(stepBuildingPanel, "Add Validation Step");
+	    toolPanel.add(stepBuildingPanel, "Modify Validation Steps");
+	    toolPanel.add(setupBuildingPanel, "Modify Setup Steps");
 
 	    RootLayoutPanel rp = RootLayoutPanel.get();
 	    rp.add(toolPanel);
@@ -181,6 +181,12 @@ public class mywebapp implements EntryPoint {
     generateCode.addClickHandler(cHandler);
   }
 
+private SplitLayoutPanel buildSetupSetup() {
+	SplitLayoutPanel panel = new SplitLayoutPanel();
+
+	return panel;
+}
+
 private SplitLayoutPanel buildStepSetup() {
 	SplitLayoutPanel panel = new SplitLayoutPanel();
 	LayoutPanel westPanel = new LayoutPanel();
@@ -189,6 +195,11 @@ private SplitLayoutPanel buildStepSetup() {
 	panel.addWest(westPanel, 384);
 	LayoutPanel mainPanel = new LayoutPanel();
 	panel.add(mainPanel);
+
+	final Button saveSteps = new Button("Save All");
+	westPanel.add(saveSteps);
+	westPanel.setWidgetBottomHeight(saveSteps, 1, Unit.EM, 3, Unit.EM);
+	westPanel.setWidgetLeftWidth(saveSteps, 1, Unit.EM, 10, Unit.EM);
 
 	//create the fields in the main panel to fill out the tree items
 	final TextBox tagID = new TextBox();
@@ -238,13 +249,13 @@ private SplitLayoutPanel buildStepSetup() {
 			ValidationTreeNode selected = (ValidationTreeNode)event.getSelectedItem();
 			if(this.lastSelected != null) {
 				try {
-					this.lastSelected.setFields(Integer.valueOf((fields.getText())));
+					this.lastSelected.setFields(Integer.valueOf(fields.getText()));
 					this.lastSelected.setText(description.getText().trim());
 					this.lastSelected.setDescriptions(fieldDescriptions.getText());
 				} catch (NumberFormatException e) {
 					//TODO replace this with better error message handling
-					this.lastSelected.setText("Input a valid number");
-					t.setSelectedItem(this.lastSelected,true);
+					this.lastSelected.setFields(Integer.valueOf(0));
+//					t.setSelectedItem(this.lastSelected,true);
 				}
 			}
 			if(updateParent.isEnabled()) {

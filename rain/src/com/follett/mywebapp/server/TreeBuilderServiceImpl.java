@@ -71,4 +71,46 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 	}
 	  return returnable;
   }
+
+  public Boolean saveTreeItems(ArrayList<ValidationTreeDataItem> nodes) {
+	  Boolean exception = Boolean.FALSE;
+	  try {
+		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+		  // TODO get tree items and build them into the tree
+		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
+		  "databaseName=Rain;user=sa;password=stuffy;";
+		  Connection conn = DriverManager.getConnection(url);
+		  Statement stmt = conn.createStatement();
+		  String sql = "";
+		  for (ValidationTreeDataItem item : nodes) {
+			  sql = "UPDATE dbo.TreeItems SET " +
+			  "parentTagID = '" + item.getParentTagID() + "', " +
+			  "description = '" + item.getDescription() + "', " +
+			  "fields = '" + item.getFields() + "', " +
+			  "fieldDescriptions = '" + item.getDescriptionsToString() + "', " +
+			  "where tagID = '" + item.getTagID() + "'";
+			  int success = stmt.executeUpdate(sql);
+			  if(success != 0) {
+				  sql = "INSERT INTO dbo.TreeItems " +
+				  "(tagID, parentTagID, description, fields, fieldDescriptions) values (" +
+				  "'" + item.getTagID() + "', " +
+				  "'" + item.getParentTagID() + "', " +
+				  "'" + item.getDescription() + "', " +
+				  "'" + item.getFields() + "', " +
+				  "'" + item.getDescriptionsToString() + "') ";
+				  success = stmt.executeUpdate(sql);
+			  }
+		  }
+		  conn.close();
+	  } catch (InstantiationException e) {
+		  exception = Boolean.TRUE;
+	  } catch (IllegalAccessException e) {
+		  exception = Boolean.TRUE;
+	  } catch (ClassNotFoundException e) {
+		  exception = Boolean.TRUE;
+	  } catch (SQLException e) {
+		  exception = Boolean.TRUE;
+	  }
+	  return exception;
+  }
 }

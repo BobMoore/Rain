@@ -12,4 +12,5 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface TreeBuilderService extends RemoteService {
 
   HashMap<String, ArrayList<ValidationTreeDataItem>> getTreeItems();
+  Boolean saveTreeItems(ArrayList<ValidationTreeDataItem> nodes);
 }

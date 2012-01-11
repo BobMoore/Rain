@@ -1,6 +1,7 @@
 package com.follett.mywebapp.util;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class ValidationTreeDataItem implements Serializable{
 
@@ -10,6 +11,7 @@ public class ValidationTreeDataItem implements Serializable{
 	private String parentTagID;
 	private String description;
 	private Integer fields;
+	private ArrayList<String> descriptions;
 
 	//added an empty constructor to allow for serializable.
 	public ValidationTreeDataItem() {
@@ -17,6 +19,7 @@ public class ValidationTreeDataItem implements Serializable{
 		this.parentTagID = null;
 		this.description = null;
 		this.fields = null;
+		this.descriptions = new ArrayList<String>();
 	}
 
 	public ValidationTreeDataItem(String tagID, String parentTagID, String description, Integer fields) {
@@ -24,6 +27,20 @@ public class ValidationTreeDataItem implements Serializable{
 		this.parentTagID = parentTagID;
 		this.description = description;
 		this.fields = fields;
+		this.descriptions = new ArrayList<String>();
+	}
+
+	public void addDescriptions(String fieldDescriptions) {
+		while(!(fieldDescriptions == null || fieldDescriptions.isEmpty())){
+			if(fieldDescriptions.contains(",")) {
+				String param = fieldDescriptions.substring(0, fieldDescriptions.indexOf(","));
+				this.descriptions.add(param);
+				fieldDescriptions = fieldDescriptions.substring(fieldDescriptions.indexOf(",") + 1);
+			} else {
+				this.descriptions.add(fieldDescriptions);
+				fieldDescriptions = null;
+			}
+		}
 	}
 
 	public String getTagID() {
@@ -56,5 +73,9 @@ public class ValidationTreeDataItem implements Serializable{
 
 	public void setFields(Integer fields) {
 		this.fields = fields;
+	}
+
+	public ArrayList<String> getDescriptions() {
+		return this.descriptions;
 	}
 }

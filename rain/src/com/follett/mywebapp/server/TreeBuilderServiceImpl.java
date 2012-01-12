@@ -87,10 +87,10 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 			  "parentTagID = '" + item.getParentTagID() + "', " +
 			  "description = '" + item.getDescription() + "', " +
 			  "fields = '" + item.getFields() + "', " +
-			  "fieldDescriptions = '" + item.getDescriptionsToString() + "', " +
-			  "where tagID = '" + item.getTagID() + "'";
+			  "fieldDescriptions = '" + item.getDescriptionsToString() + "' " +
+			  "WHERE tagID = '" + item.getTagID() + "'";
 			  int success = stmt.executeUpdate(sql);
-			  if(success != 0) {
+			  if(success == 0) {
 				  sql = "INSERT INTO dbo.TreeItems " +
 				  "(tagID, parentTagID, description, fields, fieldDescriptions) values (" +
 				  "'" + item.getTagID() + "', " +

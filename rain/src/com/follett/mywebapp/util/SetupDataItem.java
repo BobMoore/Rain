@@ -74,4 +74,11 @@ public class SetupDataItem implements Serializable{
 	public HashMap<String, ArrayList<String>> getFieldDescriptionsForID() {
 		return this.fieldDescriptionsForID;
 	}
+
+	public void setData(SetupDataItem result) {
+		this.tabs = result.getTabs();
+		this.columnsOnTab = result.getAllColumns();
+		this.dataInColumn = result.getData();
+		this.fieldDescriptionsForID = result.getFieldDescriptionsForID();
+	}
 }

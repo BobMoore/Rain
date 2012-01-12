@@ -17,8 +17,13 @@ import com.follett.mywebapp.util.ValidationTreeNode;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyPressEvent;
+import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -183,6 +188,81 @@ public class mywebapp implements EntryPoint {
 
 private SplitLayoutPanel buildSetupSetup() {
 	SplitLayoutPanel panel = new SplitLayoutPanel();
+	final Tree setupTree = new Tree();
+	final SetupDataItem allData = new SetupDataItem();
+	panel.addWest(setupTree, 256);
+
+	LayoutPanel mainPanel = new LayoutPanel();
+	final FlexTable mainTable = new FlexTable();
+
+	mainPanel.add(mainTable);
+	panel.add(mainPanel);
+
+    if (this.setupBuildingService == null) {
+    	this.setupBuildingService = GWT.create(SetupBuilderService.class);
+    }
+
+    // Set up the callback object.
+    AsyncCallback<SetupDataItem> callback = new AsyncCallback<SetupDataItem>() {
+      public void onFailure(Throwable caught) {
+      }
+
+      @Override
+      public void onSuccess(SetupDataItem result) {
+    	  allData.setData(result);
+    	  ArrayList<String> tabs = result.getTabs();
+    	  for (String tab : tabs) {
+    		  TreeItem tabItem = new TreeItem(tab);
+    		  ArrayList<String> columns = result.getColumnsOnTab(tab);
+    		  for (String column : columns) {
+    			  TreeItem columnItem = new TreeItem(column);
+    			  tabItem.addItem(columnItem);
+    		  }
+    		  setupTree.addItem(tabItem);
+    	  }
+      }
+    };
+
+    class SetupHandler implements SelectionHandler<TreeItem>{
+
+		@Override
+		public void onSelection(SelectionEvent<TreeItem> event) {
+			TreeItem selected = event.getSelectedItem();
+			if(selected.getChildCount() == 0) {
+				ArrayList<TableData> columnData = allData.getData().get(selected.getText());
+				int a = 0;
+				for (TableData data : columnData) {
+					TextBox tagID = new TextBox();
+					tagID.setEnabled(false);
+					tagID.setText(data.getTagID());
+					tagID.setTitle("Internal Field tagID.");
+					mainTable.setWidget(a, 0, tagID);
+					TextBox label = new TextBox();
+					label.setText(data.getLabel());
+					label.setTitle("Displaying Label.");
+					mainTable.setWidget(a, 1, label);
+					TextBox fields = new TextBox();
+					fields.setText(data.getTextfields().toString());
+					fields.setTitle("Number of associated text fields.");
+					mainTable.setWidget(a, 2, fields);
+					TextArea descriptions = new TextArea();
+					descriptions.setText(data.getDescriptionsToString());
+					descriptions.setTitle("Description of associated text fields.");
+					mainTable.setWidget(a, 3, descriptions);
+					a++;
+				}
+			} else {
+				mainTable.setText(0, 0, "");
+			}
+		}
+
+    }
+
+    SetupHandler treeHandler = new SetupHandler();
+    setupTree.addSelectionHandler(treeHandler);
+
+    this.setupBuildingService.getSetupData(callback);
+
 
 	return panel;
 }
@@ -192,7 +272,7 @@ private SplitLayoutPanel buildStepSetup() {
 	LayoutPanel westPanel = new LayoutPanel();
 	final Tree t = buildTree();
 	westPanel.add(t);
-	panel.addWest(westPanel, 384);
+	panel.addWest(westPanel, 256);
 	LayoutPanel mainPanel = new LayoutPanel();
 	panel.add(mainPanel);
 
@@ -280,8 +360,35 @@ private SplitLayoutPanel buildStepSetup() {
 			}
 		}
     }
-	TreeHandler treeHandler = new TreeHandler();
+
+	final TreeHandler treeHandler = new TreeHandler();
 	t.addSelectionHandler(treeHandler);
+
+	class EnterPressHandler implements KeyPressHandler, BlurHandler{
+
+		@Override
+		public void onKeyPress(KeyPressEvent event) {
+			Object source = event.getSource();
+			if(source instanceof TextBox) {
+				if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
+					SelectionEvent.fire(t, t.getSelectedItem());
+				}
+			}
+		}
+
+		@Override
+		public void onBlur(BlurEvent event) {
+			treeHandler.lastSelected.setDescriptions(fieldDescriptions.getText());
+		}
+	}
+
+	EnterPressHandler enter = new EnterPressHandler();
+	description.addKeyPressHandler(enter);
+	description.addBlurHandler(enter);
+	fields.addKeyPressHandler(enter);
+	fields.addBlurHandler(enter);
+	fieldDescriptions.addKeyPressHandler(enter);
+	fieldDescriptions.addBlurHandler(enter);
 
 	//create a way to change the parent through clicking on the tree
 	//make sure when the parent is changed, the tree is rebuilt and the focus is shifted to the moved location
@@ -320,7 +427,41 @@ private SplitLayoutPanel buildStepSetup() {
 	newNode.addClickHandler(newNodeHandler);
 
 	//Add a save tree button that calls a main method to refresh the tree. Also save to the database and have the method call out to the database.
+	class SaveStepsHandler implements ClickHandler {
 
+
+		@Override
+		public void onClick(ClickEvent event) {
+			ArrayList<TreeItem> convertable = getAllItemsFromTree(t);
+			ArrayList<ValidationTreeDataItem> sendable = new ArrayList<ValidationTreeDataItem>();
+			for (TreeItem item : convertable) {
+				ValidationTreeDataItem data = new ValidationTreeDataItem((ValidationTreeNode)item);
+				sendable.add(data);
+			}
+
+		    if (mywebapp.this.treeBuildingService == null) {
+		    	mywebapp.this.treeBuildingService = GWT.create(TreeBuilderService.class);
+		    }
+
+		    AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
+		    	public void onFailure(Throwable caught) {
+		    		System.out.print(caught);
+		    	}
+
+		    	@Override
+		    	public void onSuccess(Boolean success) {
+		    		if(success.booleanValue()) {
+		    			System.out.print("Exception!");
+		    		}
+		    	}
+
+		    };
+		    mywebapp.this.treeBuildingService.saveTreeItems(sendable, callback);
+		}
+
+	}
+	SaveStepsHandler save = new SaveStepsHandler();
+	saveSteps.addClickHandler(save);
 
 	return panel;
 }
@@ -332,6 +473,24 @@ private String getHighestTag(Tree t) {
 		if(returnable.compareTo(compare) < 0) {
 			returnable = compare;
 		}
+	}
+	return returnable;
+}
+
+private ArrayList<TreeItem> getAllItemsFromTree(Tree t){
+	ArrayList<TreeItem> items = new ArrayList<TreeItem>();
+	for(int a = 0; a < t.getItemCount(); a++) {
+		items.add(t.getItem(a));
+		items.addAll(getChildItems(t.getItem(a)));
+	}
+	return items;
+}
+
+private ArrayList<TreeItem> getChildItems(TreeItem item) {
+	ArrayList<TreeItem> returnable = new ArrayList<TreeItem>();
+	for(int a = 0; a < item.getChildCount(); a++) {
+		returnable.add(item.getChild(a));
+		returnable.addAll(getChildItems(item.getChild(a)));
 	}
 	return returnable;
 }
@@ -382,7 +541,7 @@ private Tree buildTree() {
 
 	@Override
 	public void onSuccess(HashMap<String, ArrayList<ValidationTreeDataItem>> result) {
-		ArrayList<ValidationTreeDataItem> roots = result.get(null);
+		ArrayList<ValidationTreeDataItem> roots = result.get("root");
 		for (ValidationTreeDataItem items : roots) {
 			ValidationTreeNode node = new ValidationTreeNode(items);
 			if(result.containsKey(node.getTagID())) {

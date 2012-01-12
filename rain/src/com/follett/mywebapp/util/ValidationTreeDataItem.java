@@ -30,6 +30,15 @@ public class ValidationTreeDataItem implements Serializable{
 		this.descriptions = new ArrayList<String>();
 	}
 
+	public ValidationTreeDataItem(ValidationTreeNode item) {
+		this.tagID = item.getTagID();
+		this.parentTagID = item.getParentTagID();
+		this.description = item.getText();
+		this.fields = item.getFields();
+		this.descriptions = item.getDescriptions();
+
+	}
+
 	public void addDescriptions(String fieldDescriptions) {
 		while(!(fieldDescriptions == null || fieldDescriptions.isEmpty())){
 			if(fieldDescriptions.contains(",")) {

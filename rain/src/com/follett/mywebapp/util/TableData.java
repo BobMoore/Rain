@@ -42,6 +42,20 @@ public class TableData implements Serializable{
 		}
 	}
 
+	public String getDescriptionsToString() {
+		String returnable = "";
+		boolean first = true;
+		for (String item : this.descriptions) {
+			if(first) {
+				returnable += item;
+				first = false;
+			}else {
+				returnable += ", " + item;
+			}
+		}
+		return returnable;
+	}
+
 	public String getTagID() {
 		return this.tagID;
 	}

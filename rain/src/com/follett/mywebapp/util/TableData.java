@@ -79,4 +79,8 @@ public class TableData implements Serializable{
 	public void setDescriptions(ArrayList<String> descriptions) {
 		this.descriptions = descriptions;
 	}
+
+	public void setCheckbox(boolean checkbox) {
+		this.checkbox = checkbox;
+	}
 }

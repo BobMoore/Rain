@@ -32,11 +32,31 @@ public class SetupDataItem implements Serializable{
 	}
 
 	public ArrayList<String> getColumnsOnTab(String tab) {
-		if(this.columnsOnTab.containsKey(tab)) {
-			return this.columnsOnTab.get(tab);
-		}else {
-			return null;
+		return this.columnsOnTab.get(tab);
+	}
+
+	public String getNextHighestTag() {
+		String highest = "";
+		for (String tab : this.tabs) {
+			ArrayList<String> columns = this.columnsOnTab.get(tab);
+			for (String column : columns) {
+				ArrayList<TableData> columnData = this.dataInColumn.get(column);
+				for (TableData data : columnData) {
+					highest = ((data.getTagID().compareTo(highest)) > 0 ) ? data.getTagID() : highest;
+				}
+			}
 		}
+		return incrementTagID(highest);
+	}
+
+	public static String incrementTagID(String lastTag) {
+		String returnString = "";
+		Integer returnValue = Integer.valueOf(lastTag);
+		returnValue = Integer.valueOf(returnValue.intValue() + 1);
+		for(int a = 0; a < 6 - returnValue.toString().length(); a++) {
+			returnString += "0";
+		}
+		return returnString + returnValue.toString();
 	}
 
 	public HashMap<String, ArrayList<String>> getAllColumns() {
@@ -58,6 +78,10 @@ public class SetupDataItem implements Serializable{
 		return this.dataInColumn;
 	}
 
+	public ArrayList<TableData> getDataforColumn(String column) {
+		return this.dataInColumn.get(column);
+	}
+
 	public void addDataToColumn(String column, TableData data) {
 		ArrayList<TableData> currentList = new ArrayList<TableData>();
 		if(this.dataInColumn.containsKey(column)) {
@@ -69,7 +93,9 @@ public class SetupDataItem implements Serializable{
 		this.dataInColumn.put(column, currentList);
 	}
 
-
+	public void updateDataInColumn(String column, ArrayList<TableData> data) {
+		this.dataInColumn.put(column, data);
+	}
 
 	public HashMap<String, ArrayList<String>> getFieldDescriptionsForID() {
 		return this.fieldDescriptionsForID;

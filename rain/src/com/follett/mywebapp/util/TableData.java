@@ -33,10 +33,10 @@ public class TableData implements Serializable{
 		while(!(fieldDescriptions == null || fieldDescriptions.isEmpty())){
 			if(fieldDescriptions.contains(",")) {
 				String param = fieldDescriptions.substring(0, fieldDescriptions.indexOf(","));
-				this.descriptions.add(param);
+				this.descriptions.add(param.trim());
 				fieldDescriptions = fieldDescriptions.substring(fieldDescriptions.indexOf(",") + 1);
 			} else {
-				this.descriptions.add(fieldDescriptions);
+				this.descriptions.add(fieldDescriptions.trim());
 				fieldDescriptions = null;
 			}
 		}

@@ -27,6 +27,13 @@ public class SetupDataItem implements Serializable{
 		}
 	}
 
+	public void overWriteTab(String oldTab, String newTab) {
+		if(!this.tabs.contains(oldTab)) {
+			this.tabs.remove(oldTab);
+		}
+		this.tabs.add(newTab);
+	}
+
 	public ArrayList<String> getTabs(){
 		return this.tabs;
 	}
@@ -35,14 +42,23 @@ public class SetupDataItem implements Serializable{
 		return this.columnsOnTab.get(tab);
 	}
 
+	public void updateTabWithColumns(String oldTab, String newTab, ArrayList<String> columns) {
+		if(this.columnsOnTab.get(oldTab) != null) {
+			this.columnsOnTab.remove(oldTab);
+		}
+		this.columnsOnTab.put(newTab, columns);
+	}
+
 	public String getNextHighestTag() {
 		String highest = "";
 		for (String tab : this.tabs) {
 			ArrayList<String> columns = this.columnsOnTab.get(tab);
-			for (String column : columns) {
-				ArrayList<TableData> columnData = this.dataInColumn.get(column);
-				for (TableData data : columnData) {
-					highest = ((data.getTagID().compareTo(highest)) > 0 ) ? data.getTagID() : highest;
+			if(!(columns == null || columns.isEmpty())) {
+				for (String column : columns) {
+					ArrayList<TableData> columnData = this.dataInColumn.get(column);
+					for (TableData data : columnData) {
+						highest = ((data.getTagID().compareTo(highest)) > 0 ) ? data.getTagID() : highest;
+					}
 				}
 			}
 		}
@@ -72,6 +88,9 @@ public class SetupDataItem implements Serializable{
 			currentList.add(column);
 		}
 		this.columnsOnTab.put(tab, currentList);
+	}
+	public void overWriteColumnsOnTab(String tab, ArrayList<String> columns) {
+		this.columnsOnTab.put(tab, columns);
 	}
 
 	public HashMap<String, ArrayList<TableData>> getData() {
@@ -106,5 +125,9 @@ public class SetupDataItem implements Serializable{
 		this.columnsOnTab = result.getAllColumns();
 		this.dataInColumn = result.getData();
 		this.fieldDescriptionsForID = result.getFieldDescriptionsForID();
+	}
+
+	public boolean doesTabExist(String tab) {
+		return this.tabs.contains(tab);
 	}
 }

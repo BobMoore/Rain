@@ -30,13 +30,11 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DialogBox;
-import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.LayoutPanel;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
-import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TabLayoutPanel;
 import com.google.gwt.user.client.ui.TextArea;
@@ -60,6 +58,8 @@ public class mywebapp implements EntryPoint {
 	private ArrayList<String> validationSteps = new ArrayList<String>();
 	private ArrayList<String> identifierKey = new ArrayList<String>();
 	private int startKey = 10;
+	private Tree t;
+	private LayoutPanel treePanel;
 
 	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
 	private SetupBuilderServiceAsync setupBuildingService = GWT.create(SetupBuilderService.class);
@@ -69,34 +69,30 @@ public class mywebapp implements EntryPoint {
    */
   public void onModuleLoad() {
 
-	  	final TabLayoutPanel toolPanel = new TabLayoutPanel(.7, Unit.CM);
 	    final Button saveButton = new Button("Save Test");
 	    final Button generateCode = new Button("Generate Code");
+	    final Button editSetup = new Button("Edit Setup");
 	    final LayoutPanel mainPanel = new LayoutPanel();
-	    final LayoutPanel westPanel = new LayoutPanel();
+	    this.treePanel = new LayoutPanel();
 	    final ScrollPanel flexPanel = new ScrollPanel();
 	    final TabLayoutPanel setupPanel = buildSetupPanel();
-//	    final SplitLayoutPanel stepBuildingPanel =
-	    final SplitLayoutPanel setupBuildingPanel = buildSetupSetup();
 	    final SplitLayoutPanel testDevelopementPanel = new SplitLayoutPanel();
-//	    final DialogBox validationBox = createValidationDialogBox();
 	    final Button openValidationDialog = new Button("Edit Validation Steps");
-	    Tree t = new Tree();
 	    setStepFlexTable(new FlexTable());
 
-	    t = buildTree();
-
-//	    toolPanel.add(stepBuildingPanel, "Modify Validation Steps");
-	    toolPanel.add(setupBuildingPanel, "Modify Setup Steps");
+	    this.t = buildTree();
 
 	    RootLayoutPanel rp = RootLayoutPanel.get();
 	    rp.add(testDevelopementPanel);
 
-		buildValidationTreePanel(westPanel, t, openValidationDialog);
+		this.treePanel.add(this.t);
+		this.treePanel.add(openValidationDialog);
+		this.treePanel.setWidgetLeftWidth(openValidationDialog, 1, Unit.EM, 15, Unit.EM);
+		this.treePanel.setWidgetBottomHeight(openValidationDialog, 1, Unit.EM, 3, Unit.EM);
 
-		builtStepPanel(saveButton, generateCode, mainPanel, flexPanel);
+		builtStepPanel(saveButton, generateCode, editSetup, mainPanel, flexPanel);
 
-	    buildMainPanel(mainPanel, setupPanel, testDevelopementPanel, westPanel);
+	    buildMainPanel(mainPanel, setupPanel, testDevelopementPanel, this.treePanel);
 
 	    buildStepTable();
 
@@ -133,7 +129,6 @@ public class mywebapp implements EntryPoint {
 
 		@Override
 		public void onClick(ClickEvent event) {
-			// TODO Generate the code!
 			//step one get a list of tags and variables to be sent
 			CodeContainer testCode = new CodeContainer();
 			String id = "";
@@ -186,10 +181,8 @@ public class mywebapp implements EntryPoint {
     class ValidationDialog implements ClickHandler {
 
     	DialogBox dialog;
-    	Tree treeInstance;
 
-    	public ValidationDialog(Tree t) {
-    		this.treeInstance = t;
+    	public ValidationDialog() {
     	}
 
 		@Override
@@ -197,8 +190,22 @@ public class mywebapp implements EntryPoint {
 			this.dialog = createValidationDialogBox();
 			this.dialog.show();
 			this.dialog.center();
-			this.treeInstance = buildTree();
 		}
+    }
+
+    class SetupDialog implements ClickHandler {
+
+    	DialogBox dialog;
+
+    	public SetupDialog() {
+    	}
+
+    	@Override
+    	public void onClick(ClickEvent event) {
+    		this.dialog = createSetupDialogBox();
+    		this.dialog.show();
+    		this.dialog.center();
+    	}
     }
 
     // Add a handler to send the name to the server
@@ -206,42 +213,75 @@ public class mywebapp implements EntryPoint {
     t.addSelectionHandler(tHandler);
     GenerateCodeHandler cHandler = new GenerateCodeHandler();
     generateCode.addClickHandler(cHandler);
-    ValidationDialog dialogHandler = new ValidationDialog(t);
+    ValidationDialog dialogHandler = new ValidationDialog();
     openValidationDialog.addClickHandler(dialogHandler);
+    SetupDialog setupHandler = new SetupDialog();
+    editSetup.addClickHandler(setupHandler);
   }
 
   private DialogBox createValidationDialogBox() {
 	    // Create a dialog box and set the caption text
 	    final DialogBox dialogBox = new DialogBox(false);
-//	    dialogBox.ensureDebugId("cwDialogBox");
-	    dialogBox.setStyleName("dialogs");
 
 	    Button closeButton = new Button(
 	            "Close", new ClickHandler() {
 	              public void onClick(ClickEvent event) {
+	            	resetTree();
 	                dialogBox.hide();
 	              }
 	            });
 
-	    dialogBox.setSize("500px", "500px");
-	    SimplePanel holder = new SimplePanel();
-	    holder.add(buildStepSetup(closeButton));
-	    dialogBox.setWidget(holder);
+	    //evaluate the size of their window and make this the bulk of it.
+	    dialogBox.setWidget(buildStepSetup(closeButton));
 	    dialogBox.setGlassEnabled(true);
+
 	    return dialogBox;
 	  }
 
-private SplitLayoutPanel buildSetupSetup() {
-	SplitLayoutPanel panel = new SplitLayoutPanel();
+private DialogBox createSetupDialogBox() {
+	  // Create a dialog box and set the caption text
+	  final DialogBox dialogBox = new DialogBox(false);
+
+	  Button closeButton = new Button(
+			  "Close", new ClickHandler() {
+				  public void onClick(ClickEvent event) {
+					  resetSetup();
+					  dialogBox.hide();
+				  }
+			  });
+
+	  //evaluate the size of their window and make this the bulk of it.
+	  dialogBox.setWidget(buildSetupSetup(closeButton));
+	  dialogBox.setGlassEnabled(true);
+
+	  return dialogBox;
+  }
+
+private void resetSetup() {
+	// TODO Auto-generated method stub
+
+}
+
+private LayoutPanel buildSetupSetup(Button closeButton) {
+	final LayoutPanel panel = new LayoutPanel();
+	panel.setSize("1400px", "700px");
 	final Tree setupTree = new Tree();
 	final SetupDataItem allData = new SetupDataItem();
-	panel.addWest(setupTree, 256);
-
-	LayoutPanel mainPanel = new LayoutPanel();
+	final Button addTab = new Button("Add Tab");
 	final FlexTable mainTable = new FlexTable();
 
-	mainPanel.add(mainTable);
-	panel.add(mainPanel);
+	panel.add(setupTree);
+	panel.setWidgetLeftWidth(setupTree, 1, Unit.EM, 20, Unit.EM);
+	panel.setWidgetTopHeight(setupTree, 1, Unit.EM, 40, Unit.EM);
+	panel.add(mainTable);
+	panel.setWidgetLeftWidth(mainTable, 21, Unit.EM, 100, Unit.EM);
+	panel.setWidgetTopHeight(mainTable, 1, Unit.EM, 40, Unit.EM);
+	panel.add(closeButton);
+	panel.setWidgetLeftWidth(closeButton, 1, Unit.EM, 10, Unit.EM);
+	panel.setWidgetBottomHeight(closeButton, 1, Unit.EM, 3, Unit.EM);
+	panel.add(addTab);
+	panel.setWidgetLeftWidth(addTab, 12, Unit.EM, 10, Unit.EM);
+	panel.setWidgetBottomHeight(addTab, 1, Unit.EM, 3, Unit.EM);
 
     if (this.setupBuildingService == null) {
     	this.setupBuildingService = GWT.create(SetupBuilderService.class);
@@ -269,7 +309,6 @@ private SplitLayoutPanel buildSetupSetup() {
     };
 
     class SetupHandler implements SelectionHandler<TreeItem>{
-    	int oldRows;
     	String lastColumn = null;
     	String[] title = {"Internal Field tagID.", "Displaying Label.", "Number of associated text fields.", "Description of associated text fields."};
 
@@ -277,7 +316,8 @@ private SplitLayoutPanel buildSetupSetup() {
 		public void onSelection(SelectionEvent<TreeItem> event) {
 			TreeItem selected = event.getSelectedItem();
 			mainTable.removeAllRows();
-			if(selected.getChildCount() == 0) {
+			if(selected.getParentItem() != null) {
+				//I could set the lock here! lock down the column while its being edited... but then I would need to save once the column is left.
 				RadioButton checkBox = new RadioButton("checkType", "Check Box");
 				RadioButton radioButton = new RadioButton("checkType", "Radio Button");
 				RadioChangeHandler handler = new RadioChangeHandler();
@@ -293,7 +333,7 @@ private SplitLayoutPanel buildSetupSetup() {
 				int a = 0;
 				int rowOffset = 3;
 				ArrayList<TableData> columnData = allData.getData().get(selected.getText());
-				int size = (columnData.size() + 1 < this.oldRows) ? this.oldRows: columnData.size() + 1;
+				int size = columnData.size() + 1;
 				TableData data;
 				EnterPressHandler enter = new EnterPressHandler();
 				for(a = 0; a < size; a++) {
@@ -322,17 +362,36 @@ private SplitLayoutPanel buildSetupSetup() {
 								tableBox.setWidth("500px");
 							}
 							tableBox.setText(textData[b]);
-							tableBox.setTitle(title[b]);
+							tableBox.setTitle(this.title[b]);
 							mainTable.setWidget(a + rowOffset, b, tableBox);
 							//Add a delete element button!
 						}
 					}
 				}
-				this.oldRows = columnData.size() + 1;
 				this.lastColumn = selected.getText();
 			} else {
+				String tabName = selected.getText();
+				TextBox tab = new TextBox();
+				tab.setText(tabName);
+				tab.setTitle("The displayed text on the tab");
+				mainTable.setText(0, 0, "The displayed text on the tab");
+				mainTable.setWidget(0, 1, tab);
+				mainTable.setText(1, 0, "The columns to appear within the tab");
+				ArrayList<String> columns = allData.getColumnsOnTab(tabName);
+				TabEnterPressHandler enter = new TabEnterPressHandler(tabName);
+				int a = 0;
+				TextBox box;
+				int size = (columns == null) ? 0: columns.size();
+				for(a = 0; a < size + 1; a++) {
+					box = new TextBox();
+					if(a < size) {
+						box.setText(columns.get(a));
+					}
+					box.addKeyPressHandler(enter);
+					box.addBlurHandler(enter);
+					mainTable.setWidget(a+2, 0, box);
+				}
 				this.lastColumn = null;
-				this.oldRows = 0;
 			}
 		}
 
@@ -349,6 +408,63 @@ private SplitLayoutPanel buildSetupSetup() {
 			}
 		}
 
+		class TabEnterPressHandler implements KeyPressHandler, BlurHandler{
+
+			String tabName;
+
+			public TabEnterPressHandler(String tabName) {
+				this.tabName = tabName;
+			}
+
+			@Override
+			public void onKeyPress(KeyPressEvent event) {
+				Object source = event.getSource();
+				if(source instanceof TextBox) {
+					if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
+						addData((TextBox)source);
+					}
+					if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_TAB) {
+						//Tab is firing a blurring event... the jerk
+					}
+				}
+			}
+
+			@Override
+			public void onBlur(BlurEvent event) {
+				Object source = event.getSource();
+				if(source instanceof TextBox) {
+					TextBox sourceBox = (TextBox)source;
+					if(event.getNativeEvent().getKeyCode() != KeyCodes.KEY_ENTER &&
+						event.getNativeEvent().getKeyCode() != KeyCodes.KEY_TAB) {
+						addData((TextBox)source);
+					}
+				}
+			}
+
+			private void addData(TextBox source) {
+				ArrayList<String> columns = new ArrayList<String>();
+				String columnToAdd;
+				String newTabName;
+				newTabName = ((TextBox)mainTable.getWidget(0, 1)).getText();
+				for(int row = 0; row < mainTable.getRowCount(); row++) {
+					if(mainTable.getWidget(row, 0) != null) {
+						columnToAdd = ((TextBox)mainTable.getWidget(row, 0)).getText();
+						if(!columnToAdd.isEmpty()) {
+							columns.add(columnToAdd);
+						}
+					}
+				}
+				if(allData.doesTabExist(newTabName)) {
+					allData.overWriteColumnsOnTab(newTabName, columns);
+				} else {
+					allData.overWriteTab(this.tabName, newTabName);
+					allData.updateTabWithColumns(this.tabName, newTabName, columns);
+					this.tabName = newTabName;
+				}
+				resetSetupTree(panel, setupTree, allData, setupTree.getSelectedItem());
+			}
+		}
+
 		class EnterPressHandler implements KeyPressHandler, BlurHandler{
 
 			//this is crap I know... I save the whole table everytime I lose focus or press the enter key
@@ -358,28 +474,20 @@ private SplitLayoutPanel buildSetupSetup() {
 				Object source = event.getSource();
 				if(source instanceof TextBox) {
 					if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
-						ArrayList<TableData> columnData = new ArrayList<TableData>();
-						String tagID;
-						String label;
-						Integer fields;
-						boolean checkbox;
-						TableData data;
-						for(int a = 3; a < mainTable.getRowCount(); a++) {
-							tagID = ((TextBox)mainTable.getWidget(a, 0)).getText();
-							label = ((TextBox)mainTable.getWidget(a, 1)).getText();
-							fields = Integer.valueOf(((TextBox)mainTable.getWidget(a, 2)).getText());
-							checkbox = ((RadioButton)mainTable.getWidget(1, 0)).getValue().booleanValue();
-							data = new TableData(tagID, label, checkbox, fields);
-							data.addDescriptions(((TextBox)mainTable.getWidget(a, 3)).getText());
-							columnData.add(data);
-						}
-						allData.updateDataInColumn(SetupHandler.this.lastColumn, columnData);
+						addData((TextBox)source);
 					}
 				}
 			}
 
 			@Override
 			public void onBlur(BlurEvent event) {
+				Object source = event.getSource();
+				if(source instanceof TextBox) {
+					addData((TextBox)source);
+				}
+			}
+
+			private void addData(TextBox source) {
 				ArrayList<TableData> columnData = new ArrayList<TableData>();
 				String tagID;
 				String label;
@@ -391,79 +499,94 @@ private SplitLayoutPanel buildSetupSetup() {
 					label = ((TextBox)mainTable.getWidget(a, 1)).getText();
 					fields = Integer.valueOf(((TextBox)mainTable.getWidget(a, 2)).getText());
 					checkbox = ((RadioButton)mainTable.getWidget(1, 0)).getValue().booleanValue();
-					data = new TableData(tagID, label, checkbox, fields);
-					data.addDescriptions(((TextBox)mainTable.getWidget(a, 3)).getText());
-					columnData.add(data);
+					if(!label.isEmpty()) {
+						data = new TableData(tagID, label, checkbox, fields);
+						data.addDescriptions(((TextBox)mainTable.getWidget(a, 3)).getText());
+						columnData.add(data);
+					}
 				}
 				allData.updateDataInColumn(SetupHandler.this.lastColumn, columnData);
+				resetSetupTree(panel, setupTree, allData, setupTree.getSelectedItem());
+				//Still loses focus!! Get the focus back to the element they were in. Also tab button will cause a loss in focus(blur) but we don't want that to go away!
+//				source.setFocus(true);
 			}
 		}
-
     }
 
     SetupHandler treeHandler = new SetupHandler();
     setupTree.addSelectionHandler(treeHandler);
 
-    this.setupBuildingService.getSetupData(callback);
+	class TabAdder implements ClickHandler{
 
+		//bad garbage collection as I'm only ripping out the top level of the tree, all of the associated children are probably still there.
+		@Override
+		public void onClick(ClickEvent event) {
+			allData.addTab("New Tab");
+			resetSetupTree(panel, setupTree, allData);
+		}
+	}
+
+	TabAdder tabHandler = new TabAdder();
+	addTab.addClickHandler(tabHandler);
+
+    this.setupBuildingService.getSetupData(callback);
 
 	return panel;
 }
 
-private DockLayoutPanel buildStepSetup(Button closeButton) {
-	DockLayoutPanel panel = new DockLayoutPanel(Unit.EM);
-	LayoutPanel westPanel = new LayoutPanel();
-	final Tree t = buildTree();
-	westPanel.add(t);
-	westPanel.add(closeButton);
-	westPanel.setWidgetLeftWidth(closeButton, 1, Unit.EM, 10, Unit.EM);
-	westPanel.setWidgetBottomHeight(closeButton, 1, Unit.EM, 3, Unit.EM);
-	panel.addWest(westPanel, 256);
-	LayoutPanel mainPanel = new LayoutPanel();
-	panel.add(mainPanel);
+private LayoutPanel buildStepSetup(Button closeButton) {
+	LayoutPanel panel = new LayoutPanel();
+	panel.setSize("700px", "700px");
+	final Tree innerTree = buildTree();
+	panel.add(innerTree);
+	panel.setWidgetLeftWidth(innerTree, 1, Unit.EM, 25, Unit.EM);
+	panel.setWidgetTopHeight(innerTree, 1, Unit.EM, 40, Unit.EM);
 
 	final Button saveSteps = new Button("Save All");
-	westPanel.add(saveSteps);
-	westPanel.setWidgetBottomHeight(saveSteps, 1, Unit.EM, 3, Unit.EM);
-	westPanel.setWidgetLeftWidth(saveSteps, 1, Unit.EM, 10, Unit.EM);
+	panel.add(saveSteps);
+	panel.setWidgetBottomHeight(saveSteps, 1, Unit.EM, 3, Unit.EM);
+	panel.setWidgetLeftWidth(saveSteps, 1, Unit.EM, 10, Unit.EM);
+	panel.add(closeButton);
+	panel.setWidgetBottomHeight(closeButton, 1, Unit.EM, 3, Unit.EM);
+	panel.setWidgetLeftWidth(closeButton, 12, Unit.EM, 10, Unit.EM);
 
 	//create the fields in the main panel to fill out the tree items
 	final TextBox tagID = new TextBox();
 	tagID.setReadOnly(true);
 	tagID.setTitle("Internal TagID. This is a non editable field");
-	mainPanel.add(tagID);
-	mainPanel.setWidgetLeftWidth(tagID, 1, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(tagID, 1, Unit.EM, 3, Unit.EM);
+	panel.add(tagID);
+	panel.setWidgetLeftWidth(tagID, 26, Unit.EM, 10, Unit.EM);
+	panel.setWidgetTopHeight(tagID, 1, Unit.EM, 3, Unit.EM);
 	final TextBox parentTagID = new TextBox();
 	parentTagID.setReadOnly(true);
 	parentTagID.setTitle("Internal parentTagID. Please use the button on the right to edit this.");
-	mainPanel.add(parentTagID);
-	mainPanel.setWidgetLeftWidth(parentTagID, 1, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(parentTagID, 5, Unit.EM, 3, Unit.EM);
+	panel.add(parentTagID);
+	panel.setWidgetLeftWidth(parentTagID, 26, Unit.EM, 10, Unit.EM);
+	panel.setWidgetTopHeight(parentTagID, 5, Unit.EM, 3, Unit.EM);
 	final Button updateParent = new Button("Update Parent");
-	mainPanel.add(updateParent);
-	mainPanel.setWidgetLeftWidth(updateParent, 12, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(updateParent, 5, Unit.EM, 3, Unit.EM);
+	panel.add(updateParent);
+	panel.setWidgetLeftWidth(updateParent, 38, Unit.EM, 10, Unit.EM);
+	panel.setWidgetTopHeight(updateParent, 5, Unit.EM, 3, Unit.EM);
 	final TextBox description = new TextBox();
 	description.setTitle("Displayable discription of the step.");
-	mainPanel.add(description);
-	mainPanel.setWidgetLeftWidth(description, 1, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(description, 9, Unit.EM, 3, Unit.EM);
+	panel.add(description);
+	panel.setWidgetLeftWidth(description, 26, Unit.EM, 10, Unit.EM);
+	panel.setWidgetTopHeight(description, 9, Unit.EM, 3, Unit.EM);
 	final TextBox fields = new TextBox();
 	//rewrite... gah
 	fields.setTitle("Number of editable fields to fill out when this step is used.");
-	mainPanel.add(fields);
-	mainPanel.setWidgetLeftWidth(fields, 1, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(fields, 13, Unit.EM, 3, Unit.EM);
+	panel.add(fields);
+	panel.setWidgetLeftWidth(fields, 26, Unit.EM, 10, Unit.EM);
+	panel.setWidgetTopHeight(fields, 13, Unit.EM, 3, Unit.EM);
 	final TextArea fieldDescriptions = new TextArea();
-	mainPanel.add(fieldDescriptions);
+	panel.add(fieldDescriptions);
 	fieldDescriptions.setTitle("Description of the fields used, seperated by a comma.");
-	mainPanel.setWidgetLeftWidth(fieldDescriptions, 1, Unit.EM, 20, Unit.EM);
-	mainPanel.setWidgetTopHeight(fieldDescriptions, 17, Unit.EM, 6, Unit.EM);
+	panel.setWidgetLeftWidth(fieldDescriptions, 26, Unit.EM, 20, Unit.EM);
+	panel.setWidgetTopHeight(fieldDescriptions, 17, Unit.EM, 6, Unit.EM);
 	final Button newNode = new Button("New Step");
-	mainPanel.add(newNode);
-	mainPanel.setWidgetLeftWidth(newNode, 1, Unit.EM, 7, Unit.EM);
-	mainPanel.setWidgetTopHeight(newNode, 25, Unit.EM, 3, Unit.EM);
+	panel.add(newNode);
+	panel.setWidgetLeftWidth(newNode, 26, Unit.EM, 7, Unit.EM);
+	panel.setWidgetTopHeight(newNode, 25, Unit.EM, 3, Unit.EM);
 
 	//Create a listener for a the tree to put the selection into the fields in the main panel
 	class TreeHandler implements SelectionHandler<TreeItem>{
@@ -479,7 +602,6 @@ private DockLayoutPanel buildStepSetup(Button closeButton) {
 					this.lastSelected.setText(description.getText().trim());
 					this.lastSelected.setDescriptions(fieldDescriptions.getText());
 				} catch (NumberFormatException e) {
-					//TODO replace this with better error message handling
 					this.lastSelected.setFields(Integer.valueOf(0));
 //					t.setSelectedItem(this.lastSelected,true);
 				}
@@ -495,20 +617,20 @@ private DockLayoutPanel buildStepSetup(Button closeButton) {
 				updateParent.setText("Update Parent");
 				updateParent.setEnabled(true);
 				if(newNode.isEnabled()) {
-					t.removeItem(this.lastSelected);
+					innerTree.removeItem(this.lastSelected);
 					this.lastSelected.setParentTagID(selected.getTagID());
 				}else {
 					this.lastSelected = new ValidationTreeNode(tagID.getText(), selected.getTagID(), "New Step", Integer.valueOf(0));
 					newNode.setEnabled(true);
 				}
 				selected.addItem(this.lastSelected);
-				t.setSelectedItem(this.lastSelected, true);
+				innerTree.setSelectedItem(this.lastSelected, true);
 			}
 		}
     }
 
 	final TreeHandler treeHandler = new TreeHandler();
-	t.addSelectionHandler(treeHandler);
+	innerTree.addSelectionHandler(treeHandler);
 
 	class EnterPressHandler implements KeyPressHandler, BlurHandler{
 
@@ -517,7 +639,7 @@ private DockLayoutPanel buildStepSetup(Button closeButton) {
 			Object source = event.getSource();
 			if(source instanceof TextBox) {
 				if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
-					SelectionEvent.fire(t, t.getSelectedItem());
+					SelectionEvent.fire(innerTree, innerTree.getSelectedItem());
 				}
 			}
 		}
@@ -557,7 +679,7 @@ private DockLayoutPanel buildStepSetup(Button closeButton) {
 
 		@Override
 		public void onClick(ClickEvent event) {
-			String highestTag = getHighestTag(t);
+			String highestTag = getHighestTag(innerTree);
 			newNode.setEnabled(false);
 			tagID.setText(ValidationTreeNode.incrementTagID(highestTag));
 			updateParent.setText("Click new parent");
@@ -578,7 +700,7 @@ private DockLayoutPanel buildStepSetup(Button closeButton) {
 
 		@Override
 		public void onClick(ClickEvent event) {
-			ArrayList<TreeItem> convertable = getAllItemsFromTree(t);
+			ArrayList<TreeItem> convertable = getAllItemsFromTree(innerTree);
 			ArrayList<ValidationTreeDataItem> sendable = new ArrayList<ValidationTreeDataItem>();
 			for (TreeItem item : convertable) {
 				ValidationTreeDataItem data = new ValidationTreeDataItem((ValidationTreeNode)item);
@@ -612,10 +734,10 @@ private DockLayoutPanel buildStepSetup(Button closeButton) {
 	return panel;
 }
 
-private String getHighestTag(Tree t) {
+private String getHighestTag(Tree tree) {
 	String returnable = "";
-	for(int a = 0; a < t.getItemCount(); a++) {
-		String compare = compareChildren((ValidationTreeNode)t.getItem(a));
+	for(int a = 0; a < tree.getItemCount(); a++) {
+		String compare = compareChildren((ValidationTreeNode)tree.getItem(a));
 		if(returnable.compareTo(compare) < 0) {
 			returnable = compare;
 		}
@@ -623,11 +745,11 @@ private String getHighestTag(Tree t) {
 	return returnable;
 }
 
-private ArrayList<TreeItem> getAllItemsFromTree(Tree t){
+private ArrayList<TreeItem> getAllItemsFromTree(Tree tree){
 	ArrayList<TreeItem> items = new ArrayList<TreeItem>();
-	for(int a = 0; a < t.getItemCount(); a++) {
-		items.add(t.getItem(a));
-		items.addAll(getChildItems(t.getItem(a)));
+	for(int a = 0; a < tree.getItemCount(); a++) {
+		items.add(tree.getItem(a));
+		items.addAll(getChildItems(tree.getItem(a)));
 	}
 	return items;
 }
@@ -652,7 +774,7 @@ private String compareChildren(ValidationTreeNode item) {
 	return returnable;
 }
 
-private void builtStepPanel(final Button saveButton, final Button generateCode,
+private void builtStepPanel(final Button saveButton, final Button generateCode, final Button editSetup,
 		final LayoutPanel mainPanel, ScrollPanel flexPanel) {
 	mainPanel.add(saveButton);
 	mainPanel.setWidgetLeftWidth(saveButton, 1, Unit.EM, 10, Unit.EM);
@@ -660,19 +782,14 @@ private void builtStepPanel(final Button saveButton, final Button generateCode,
 	mainPanel.add(generateCode);
 	mainPanel.setWidgetLeftWidth(generateCode, 12, Unit.EM, 10, Unit.EM);
 	mainPanel.setWidgetTopHeight(generateCode, 1, Unit.EM, 3, Unit.EM);
+	mainPanel.add(editSetup);
+	mainPanel.setWidgetLeftWidth(editSetup, 23, Unit.EM, 10, Unit.EM);
+	mainPanel.setWidgetTopHeight(editSetup, 1, Unit.EM, 3, Unit.EM);
 	flexPanel.add(this.stepFlexTable);
 	flexPanel.ensureVisible(this.stepFlexTable);
 	mainPanel.add(flexPanel);
 	mainPanel.setWidgetLeftWidth(flexPanel, 1, Unit.EM, 100, Unit.EM);
 	mainPanel.setWidgetTopHeight(flexPanel, 5, Unit.EM, 100, Unit.EM);
-}
-
-private void buildValidationTreePanel(final LayoutPanel westPanel,
-		Tree t, Button openValidationDialog) {
-	westPanel.add(t);
-	westPanel.add(openValidationDialog);
-	westPanel.setWidgetLeftWidth(openValidationDialog, 1, Unit.EM, 15, Unit.EM);
-	westPanel.setWidgetBottomHeight(openValidationDialog, 1, Unit.EM, 3, Unit.EM);
 }
 
 private Tree buildTree() {
@@ -717,9 +834,6 @@ private Tree buildTree() {
 
 private TabLayoutPanel buildSetupPanel() {
 	final TabLayoutPanel setupPanel = new TabLayoutPanel(.7, Unit.CM);
-
-	//TODO add in the items for the tabs and check boxes
-	//possibly allow for added patrons to flag into the bib box to allow for selecting them to checkout to?
 
 	// Initialize the service proxy.
     if (this.setupBuildingService == null) {
@@ -884,6 +998,12 @@ class RemoveStepHandler implements ClickHandler {
 	}
 }
 
+public void resetTree() {
+	this.treePanel.remove(this.t);
+	this.t = buildTree();
+	this.treePanel.add(this.t);
+}
+
 public void setEditTree(boolean editTree) {
 	this.editTree = editTree;
 }
@@ -962,6 +1082,50 @@ public void bumpSetupRow() {
 
 public void reduceSetupRow() {
 	this.setupRow--;
+}
+
+private void resetSetupTree(final LayoutPanel panel, final Tree setupTree,
+		final SetupDataItem allData) {
+	resetSetupTree(panel, setupTree, allData, null);
+}
+
+private void resetSetupTree(final LayoutPanel panel, final Tree setupTree,
+		final SetupDataItem allData, TreeItem selected) {
+	TreeItem selectedItem = null;
+	String selectedText = null;
+	if(selected != null) {
+		selectedText = selected.getText();
+	}
+	panel.remove(setupTree);
+	setupTree.removeItems();
+	ArrayList<String> tabs = allData.getTabs();
+	for (String tab : tabs) {
+		TreeItem tabItem = new TreeItem(tab);
+		if(selected != null && tab.equals(selectedText)) {
+			selectedItem = tabItem;
+		}
+		ArrayList<String> columns = allData.getColumnsOnTab(tab);
+		if(!(columns == null || columns.isEmpty())) {
+			for (String column : columns) {
+				TreeItem columnItem = new TreeItem(column);
+				tabItem.addItem(columnItem);
+				if(selected != null && column.equals(selectedText)) {
+					selectedItem = columnItem;
+				}
+			}
+		}
+		setupTree.addItem(tabItem);
+	}
+	panel.add(setupTree);
+	panel.setWidgetLeftWidth(setupTree, 1, Unit.EM, 20, Unit.EM);
+	panel.setWidgetTopHeight(setupTree, 1, Unit.EM, 40, Unit.EM);
+	if(selectedItem != null) {
+		if(selectedItem.getParentItem() != null) {
+			selectedItem.getParentItem().setState(true);
+		}
+		setupTree.setSelectedItem(selectedItem);
+		setupTree.getSelectedItem().setState(selected.getState());
+	}
 }
 }
 

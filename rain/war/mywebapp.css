@@ -2,14 +2,7 @@
 
 /** Most GWT widgets already have a style name defined */
 .dialogs {
-    width                  :    400px;
-    background-color       :    #fffff;
-    border                 :    10px solid #009;
-    font-style             :    italic;
-}
-
-
-/** Set ids using widget.getElement().setId("idOfElement") */
-#closeButton {
-  margin: 15px 6px 6px;
+    background-color       :    white;
+    border                 :    5px solid #111;
+    color: black;
 }

@@ -9,4 +9,5 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface SetupBuilderService extends RemoteService {
 
   SetupDataItem getSetupData();
+  Boolean saveSetupData(SetupDataItem allData);
 }

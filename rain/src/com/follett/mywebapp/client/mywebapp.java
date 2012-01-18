@@ -60,6 +60,7 @@ public class mywebapp implements EntryPoint {
 	private int startKey = 10;
 	private Tree t;
 	private LayoutPanel treePanel;
+	private TabLayoutPanel setupPanel;
 
 	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
 	private SetupBuilderServiceAsync setupBuildingService = GWT.create(SetupBuilderService.class);
@@ -75,7 +76,7 @@ public class mywebapp implements EntryPoint {
 	    final LayoutPanel mainPanel = new LayoutPanel();
 	    this.treePanel = new LayoutPanel();
 	    final ScrollPanel flexPanel = new ScrollPanel();
-	    final TabLayoutPanel setupPanel = buildSetupPanel();
+	    this.setupPanel = buildSetupPanel();
 	    final SplitLayoutPanel testDevelopementPanel = new SplitLayoutPanel();
 	    final Button openValidationDialog = new Button("Edit Validation Steps");
 	    setStepFlexTable(new FlexTable());
@@ -258,8 +259,7 @@ private DialogBox createSetupDialogBox() {
   }
 
 private void resetSetup() {
-	// TODO Auto-generated method stub
-
+	this.setupPanel = buildSetupPanel();
 }
 
 private LayoutPanel buildSetupSetup(Button closeButton) {
@@ -269,6 +269,7 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 	final SetupDataItem allData = new SetupDataItem();
 	final Button addTab = new Button("Add Tab");
 	final FlexTable mainTable = new FlexTable();
+	final Button saveButton = new Button("Save All");
 
 	panel.add(setupTree);
 	panel.setWidgetLeftWidth(setupTree, 1, Unit.EM, 20, Unit.EM);
@@ -276,12 +277,15 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 	panel.add(mainTable);
 	panel.setWidgetLeftWidth(mainTable, 21, Unit.EM, 100, Unit.EM);
 	panel.setWidgetTopHeight(mainTable, 1, Unit.EM, 40, Unit.EM);
-	panel.add(closeButton);
-	panel.setWidgetLeftWidth(closeButton, 1, Unit.EM, 10, Unit.EM);
-	panel.setWidgetBottomHeight(closeButton, 1, Unit.EM, 3, Unit.EM);
+	panel.add(saveButton);
+	panel.setWidgetLeftWidth(saveButton, 1, Unit.EM, 10, Unit.EM);
+	panel.setWidgetBottomHeight(saveButton, 1, Unit.EM, 3, Unit.EM);
 	panel.add(addTab);
 	panel.setWidgetLeftWidth(addTab, 12, Unit.EM, 10, Unit.EM);
 	panel.setWidgetBottomHeight(addTab, 1, Unit.EM, 3, Unit.EM);
+	panel.add(closeButton);
+	panel.setWidgetLeftWidth(closeButton, 23, Unit.EM, 10, Unit.EM);
+	panel.setWidgetBottomHeight(closeButton, 1, Unit.EM, 3, Unit.EM);
 
     if (this.setupBuildingService == null) {
     	this.setupBuildingService = GWT.create(SetupBuilderService.class);
@@ -318,12 +322,18 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 			mainTable.removeAllRows();
 			if(selected.getParentItem() != null) {
 				//I could set the lock here! lock down the column while its being edited... but then I would need to save once the column is left.
+				EnterPressHandler enter = new EnterPressHandler();
 				RadioButton checkBox = new RadioButton("checkType", "Check Box");
 				RadioButton radioButton = new RadioButton("checkType", "Radio Button");
 				RadioChangeHandler handler = new RadioChangeHandler();
 				checkBox.addClickHandler(handler);
 				radioButton.addClickHandler(handler);
-				mainTable.setText(0,0,selected.getText());
+				TextBox tableBox;
+				tableBox = new TextBox();
+				tableBox.setText(selected.getText());
+				tableBox.addKeyPressHandler(enter);
+				tableBox.addBlurHandler(enter);
+				mainTable.setWidget(0, 0, tableBox);
 				mainTable.setWidget(1, 0, checkBox);
 				mainTable.setWidget(1, 1, radioButton);
 				String[] columnHeaders = {"TagID", "Diplay", "Editable Fields", "Description of fields"};
@@ -333,18 +343,21 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 				int a = 0;
 				int rowOffset = 3;
 				ArrayList<TableData> columnData = allData.getData().get(selected.getText());
+				if(columnData == null) {
+					columnData = new ArrayList<TableData>();
+					checkBox.setValue(Boolean.TRUE);
+				}
 				int size = columnData.size() + 1;
 				TableData data;
-				EnterPressHandler enter = new EnterPressHandler();
 				for(a = 0; a < size; a++) {
 					if(a <= columnData.size()) {
 						if (a == columnData.size()) {
-							data = new TableData(allData.getNextHighestTag(), "", columnData.get(a-1).isCheckbox(), Integer.valueOf(0));
+							boolean value = (a > 0) ? columnData.get(a-1).isCheckbox() : checkBox.getValue().booleanValue();
+							data = new TableData(allData.getNextHighestTag(), "", value, Integer.valueOf(0));
 						} else {
 							data = columnData.get(a);
 						}
 						String[] textData = {data.getTagID(), data.getLabel(), data.getTextfields().toString(), data.getDescriptionsToString()};
-						TextBox tableBox;
 						if(data.isCheckbox() && !checkBox.getValue().booleanValue()) {
 							checkBox.setValue(Boolean.TRUE);
 						}
@@ -386,6 +399,7 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 					box = new TextBox();
 					if(a < size) {
 						box.setText(columns.get(a));
+						box.setEnabled(false);
 					}
 					box.addKeyPressHandler(enter);
 					box.addBlurHandler(enter);
@@ -528,6 +542,36 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 
 	TabAdder tabHandler = new TabAdder();
 	addTab.addClickHandler(tabHandler);
+
+	class SaveAll implements ClickHandler{
+
+		@Override
+		public void onClick(ClickEvent event) {
+		    if (mywebapp.this.setupBuildingService == null) {
+		    	mywebapp.this.setupBuildingService = GWT.create(SetupBuilderService.class);
+		    }
+
+			AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
+
+				@Override
+				public void onFailure(Throwable caught) {
+					System.out.print("Failure!");
+				}
+
+				@Override
+				public void onSuccess(Boolean result) {
+					if(result.booleanValue()) {
+						System.out.print("Exception!");
+					}
+				}
+			};
+			mywebapp.this.setupBuildingService.saveSetupData(allData, callback);
+			mywebapp.this.setupBuildingService = null;
+		}
+	}
+
+	SaveAll saveHandler = new SaveAll();
+	saveButton.addClickHandler(saveHandler);
 
     this.setupBuildingService.getSetupData(callback);
 
@@ -1002,6 +1046,8 @@ public void resetTree() {
 	this.treePanel.remove(this.t);
 	this.t = buildTree();
 	this.treePanel.add(this.t);
+	this.treePanel.setWidgetLeftWidth(this.t, 0, Unit.PX, 256, Unit.PX);
+	this.treePanel.setWidgetTopHeight(this.t, 0, Unit.EM, 100, Unit.EM);
 }
 
 public void setEditTree(boolean editTree) {

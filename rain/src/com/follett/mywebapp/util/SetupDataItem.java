@@ -47,6 +47,11 @@ public class SetupDataItem implements Serializable{
 			this.columnsOnTab.remove(oldTab);
 		}
 		this.columnsOnTab.put(newTab, columns);
+		for (String column : columns) {
+			if(this.dataInColumn.get(column) == null) {
+				this.dataInColumn.put(column, new ArrayList<TableData>());
+			}
+		}
 	}
 
 	public String getNextHighestTag() {
@@ -91,6 +96,11 @@ public class SetupDataItem implements Serializable{
 	}
 	public void overWriteColumnsOnTab(String tab, ArrayList<String> columns) {
 		this.columnsOnTab.put(tab, columns);
+		for (String column : columns) {
+			if(this.dataInColumn.get(column) == null) {
+				this.dataInColumn.put(column, new ArrayList<TableData>());
+			}
+		}
 	}
 
 	public HashMap<String, ArrayList<TableData>> getData() {

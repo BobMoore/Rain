@@ -76,7 +76,6 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 	  Boolean exception = Boolean.FALSE;
 	  try {
 		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
-		  // TODO get tree items and build them into the tree
 		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
 		  "databaseName=Rain;user=sa;password=stuffy;";
 		  Connection conn = DriverManager.getConnection(url);

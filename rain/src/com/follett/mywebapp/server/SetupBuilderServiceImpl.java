@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import com.follett.mywebapp.util.SetupDataItem;
 import com.follett.mywebapp.util.TableData;
@@ -69,5 +70,60 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 		e.printStackTrace();
 	}
 	  return returnable;
+  }
+
+  public Boolean saveSetupData(SetupDataItem allData) {
+	  Boolean exception = Boolean.FALSE;
+	  try {
+		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
+		  "databaseName=Rain;user=sa;password=stuffy;";
+		  Connection conn = DriverManager.getConnection(url);
+		  Statement stmt = conn.createStatement();
+		  String sql = "";
+		  ArrayList<String> tabs = allData.getTabs();
+		  for (String tab : tabs) {
+			  ArrayList<String> columns = allData.getColumnsOnTab(tab);
+			  for (String column : columns) {
+				  ArrayList<TableData> dataSet = allData.getDataforColumn(column);
+				  if(dataSet != null) {
+					  for (TableData item : dataSet) {
+						  sql = "UPDATE dbo.Setup SET " +
+						  "columnHeading = '" + column + "', " +
+						  "checkbox = '" + item.isCheckbox() + "', " +
+						  "label = '" + item.getLabel() + "', " +
+						  "textfields = '" + item.getTextfields() + "', " +
+						  "tab = '" + tab + "', " +
+						  "fieldDescriptions = '" + item.getDescriptionsToString() + "' " +
+						  "WHERE tagID = '" + item.getTagID() + "'";
+						  int success = stmt.executeUpdate(sql);
+						  if(success == 0) {
+							  sql = "INSERT INTO dbo.Setup " +
+							  "(columnHeading, tagID, checkbox, label, textfields, tab, fieldDescriptions) values (" +
+							  "'" + column + "', " +
+							  "'" + item.getTagID() + "', " +
+							  "'" + item.isCheckbox() + "', " +
+							  "'" + item.getLabel() + "', " +
+							  "'" + item.getTextfields() + "', " +
+							  "'" + tab + "', " +
+							  "'" + item.getDescriptionsToString() + "' " +
+							  ") ";
+							  success = stmt.executeUpdate(sql);
+						  }
+					  }
+				  }
+			  }
+		  }
+		  conn.close();
+	  } catch (InstantiationException e) {
+		  exception = Boolean.TRUE;
+	  } catch (IllegalAccessException e) {
+		  exception = Boolean.TRUE;
+	  } catch (ClassNotFoundException e) {
+		  exception = Boolean.TRUE;
+	  } catch (SQLException e) {
+		  exception = Boolean.TRUE;
+	  }
+	  return exception;
   }
 }

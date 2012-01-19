@@ -85,7 +85,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
   }
 
   @Override
-  public Boolean doesTextExist(int testNumber) {
+  public Boolean doesTestExist(int testNumber) {
 	  Boolean exists = Boolean.FALSE;
 	  try {
 		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
@@ -113,5 +113,29 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 		  exists = Boolean.FALSE;
 	  }
 	  return exists;
+  }
+
+  @Override
+  public String getTest(int testNumber) {
+	  String returnable = "";
+	  try {
+		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
+		  "databaseName=Rain;user=sa;password=stuffy;";
+		  Connection conn = DriverManager.getConnection(url);
+		  Statement stmt = conn.createStatement();
+		  String sql = "SELECT Steps FROM dbo.Tests\r\n" +
+		  		"WHERE TestNumber = "+ testNumber +";";
+		  ResultSet rs = stmt.executeQuery(sql);
+		  if(rs.next()) {
+			  returnable = rs.getString("Steps");
+		  }
+		  conn.close();
+	  } catch (InstantiationException e) {
+	  } catch (IllegalAccessException e) {
+	  } catch (ClassNotFoundException e) {
+	  } catch (SQLException e) {
+	  }
+	  return returnable;
   }
 }

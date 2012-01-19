@@ -11,5 +11,6 @@ public interface CodeBuilderService extends RemoteService {
 
   ArrayList<String> getCodePieces();
   Boolean saveTest(int testNumber, String testSteps);
-  Boolean doesTextExist(int TestNumber);
+  Boolean doesTestExist(int TestNumber);
+  String getTest(int TestNumber);
 }

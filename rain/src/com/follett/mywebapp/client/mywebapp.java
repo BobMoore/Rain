@@ -10,6 +10,7 @@ import com.follett.mywebapp.server.SetupBuilderServiceAsync;
 import com.follett.mywebapp.server.TreeBuilderService;
 import com.follett.mywebapp.server.TreeBuilderServiceAsync;
 import com.follett.mywebapp.util.CodeContainer;
+import com.follett.mywebapp.util.CodeStep;
 import com.follett.mywebapp.util.SetupDataItem;
 import com.follett.mywebapp.util.StepHolder;
 import com.follett.mywebapp.util.TableData;
@@ -266,7 +267,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 		    }
 
 		    // Set up the callback object.
-		    AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
+		    AsyncCallback<Boolean> callbackCheck = new AsyncCallback<Boolean>() {
 		    	@Override
 		    	public void onFailure(Throwable caught) {
 		    	}
@@ -281,17 +282,94 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 		    	}
 		    };
 		    try {
-		    	mywebapp.this.codeBuildingService.doesTextExist(Integer.valueOf(testNumber.getText()).intValue(), callback);
+		    	mywebapp.this.codeBuildingService.doesTestExist(Integer.valueOf(testNumber.getText()).intValue(), callbackCheck);
 		    } catch (NumberFormatException e) {
 		    	errorLabel.setText("Bad test number");
 		    }
+		    AsyncCallback<String> callbackTest = new AsyncCallback<String>() {
+
+				@Override
+				public void onFailure(Throwable caught) {
+				}
+
+				//TODO placeholder
+				@Override
+				public void onSuccess(String result) {
+					ArrayList<CodeStep> steps = parseSteps(result);
+					for (CodeStep step : steps) {
+						System.out.print("\n" + step + " ");
+//						char firstChar = step.substring(0,1).toCharArray()[0];
+//						if(firstChar >= 'a' && firstChar <= 'Z') {
+//							System.out.print("Validation");
+//							//validation
+//						} else {
+//							System.out.print("Setup");
+//							//setup
+//						}
+					}
+				}
+
+				//format is [tag [param,param,param], tag [], tag [param]]
+				//can also have [[tag [], tag []], tag []]
+				private ArrayList<CodeStep> parseSteps(String result){
+					ArrayList<CodeStep> returnList = new ArrayList<CodeStep>();
+					//Strip off the top layer of []
+					result = result.substring(1, result.length()-1);
+					CodeStep step;
+					String params;
+					while(result.contains("[")) {
+						//contains a '[' meaning there are more steps
+						step = new CodeStep();
+						if(result.charAt(0) == '[') {
+							//multi tag step
+						} else {
+							//single tag step
+						}
+//						step.addTagID(result.substring(0, result.indexOf('[')).trim());
+//						System.out.print("\n"+tagID);
+//						result = result.substring(result.indexOf('[') + 1).trim();
+//						System.out.print("\n"+result);
+//						while(result.indexOf(']') > 0) {
+//							params = result.substring(0, result.indexOf(']'));
+//							result = result.substring(result.indexOf(']') + 1);
+//							while(params.contains(",")) {
+//								currentList.add(params.substring(0, params.indexOf(',')).trim());
+//								params = params.substring(params.indexOf(',')).trim();
+//								System.out.print("\n"+params);
+//							}
+//							if(!params.isEmpty()) {
+//								currentList.add(params);
+//							}
+//						}
+//						returnable.put(tagID, currentList);
+//						currentList = new ArrayList<String>();
+//						if(result.contains(",")) {
+//							result = result.substring(result.indexOf(',') + 1).trim();
+//						}
+					}
+					return returnList;
+				}
+		    };
+		    mywebapp.this.codeBuildingService.getTest(Integer.valueOf(testNumber.getText()).intValue(), callbackTest);
 		}
 	}
-	Button loadTest = new Button("Load");
+	final Button loadTest = new Button("Load");
 	TestLoader loader = new TestLoader();
 	loadTest.addClickHandler(loader);
 	panel.add(loadTest);
 	panel.setWidgetBottomHeight(loadTest, 32, Unit.PX, 30, Unit.PX);
+
+	class ButtonClicker implements KeyPressHandler{
+
+		@Override
+		public void onKeyPress(KeyPressEvent event) {
+			if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
+				loadTest.click();
+			}
+		}
+	}
+	ButtonClicker testNumberEnter = new ButtonClicker();
+	testNumber.addKeyPressHandler(testNumberEnter);
 	panel.add(closeButton);
 	panel.setWidgetBottomHeight(closeButton, 1, Unit.PX, 30, Unit.PX);
 	return panel;
@@ -312,7 +390,6 @@ private DialogBox createValidationDialogBox() {
 	    //evaluate the size of their window and make this the bulk of it.
 	    dialogBox.setWidget(buildStepSetup(closeButton));
 	    dialogBox.setGlassEnabled(true);
-
 	    return dialogBox;
 	  }
 
@@ -331,7 +408,6 @@ private DialogBox createSetupDialogBox() {
 	  //evaluate the size of their window and make this the bulk of it.
 	  dialogBox.setWidget(buildSetupSetup(closeButton));
 	  dialogBox.setGlassEnabled(true);
-
 	  return dialogBox;
   }
 

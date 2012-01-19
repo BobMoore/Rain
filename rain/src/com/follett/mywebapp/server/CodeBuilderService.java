@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
-@RemoteServiceRelativePath("treeBuilder")
+@RemoteServiceRelativePath("codeBuilder")
 public interface CodeBuilderService extends RemoteService {
 
   ArrayList<String> getCodePieces();
+  Boolean saveTest(int testNumber, String testSteps);
 }

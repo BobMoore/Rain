@@ -17,6 +17,16 @@
   </servlet-mapping>
 
   <servlet>
+    <servlet-name>CodeBuilderServiceImpl</servlet-name>
+    <servlet-class>com.follett.mywebapp.server.CodeBuilderServiceImpl</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>CodeBuilderServiceImpl</servlet-name>
+    <url-pattern>/mywebapp/codeBuilder</url-pattern>
+  </servlet-mapping>
+  
+  <servlet>
     <servlet-name>SetupBuilderServiceImpl</servlet-name>
     <servlet-class>com.follett.mywebapp.server.SetupBuilderServiceImpl</servlet-class>
   </servlet>

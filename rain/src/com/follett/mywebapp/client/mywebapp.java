@@ -3,6 +3,8 @@ package com.follett.mywebapp.client;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.follett.mywebapp.server.CodeBuilderService;
+import com.follett.mywebapp.server.CodeBuilderServiceAsync;
 import com.follett.mywebapp.server.SetupBuilderService;
 import com.follett.mywebapp.server.SetupBuilderServiceAsync;
 import com.follett.mywebapp.server.TreeBuilderService;
@@ -64,6 +66,7 @@ public class mywebapp implements EntryPoint {
 
 	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
 	private SetupBuilderServiceAsync setupBuildingService = GWT.create(SetupBuilderService.class);
+	private CodeBuilderServiceAsync codeBuildingService = GWT.create(CodeBuilderService.class);
 
   /**
    * This is the entry point method.
@@ -71,6 +74,7 @@ public class mywebapp implements EntryPoint {
   public void onModuleLoad() {
 
 	    final Button saveButton = new Button("Save Test");
+	    final TextBox testNumber = new TextBox();
 	    final Button generateCode = new Button("Generate Code");
 	    final Button editSetup = new Button("Edit Setup");
 	    final LayoutPanel mainPanel = new LayoutPanel();
@@ -92,7 +96,7 @@ public class mywebapp implements EntryPoint {
 		this.treePanel.setWidgetLeftWidth(openValidationDialog, 1, Unit.EM, 15, Unit.EM);
 		this.treePanel.setWidgetBottomHeight(openValidationDialog, 1, Unit.EM, 3, Unit.EM);
 
-		builtStepPanel(saveButton, generateCode, editSetup, mainPanel, flexPanel);
+		builtStepPanel(saveButton, testNumber, generateCode, editSetup, mainPanel, flexPanel);
 
 	    buildMainPanel(mainPanel, this.setupPanel, testDevelopementPanel, this.treePanel);
 
@@ -132,47 +136,7 @@ public class mywebapp implements EntryPoint {
 		@Override
 		public void onClick(ClickEvent event) {
 			//step one get a list of tags and variables to be sent
-			CodeContainer testCode = new CodeContainer();
-			String id = "";
-			HashMap<String, ArrayList<String>> textToVariables = new HashMap<String, ArrayList<String>>();
-			ArrayList<String> variables = new ArrayList<String>();
-			FlexTable instructionTable = getStepFlexTable();
-			for(int a = 1; a < instructionTable.getRowCount(); a++) {
-				if(a != getSetupRow()) {
-					int b = 0;
-					Widget w = instructionTable.getWidget(a, b);
-					while(!(w instanceof StepHolder)) {
-						if(instructionTable.getWidget(a, b) == null) {
-							b++;
-							w = instructionTable.getWidget(a, b);
-						} else {
-							variables = new ArrayList<String>();
-							while(w instanceof TextboxIDHolder) {
-								TextboxIDHolder box = (TextboxIDHolder)w;
-								variables.add(box.getText());
-								id = box.getTagID();
-								b++;
-								w = instructionTable.getWidget(a, b);
-							}
-							textToVariables.put(id, variables);
-						}
-					}
-					StepHolder tagName = (StepHolder)w;
-					if(tagName.getTagID() != null) {
-						testCode.addStep(tagName.getTagID(), variables);
-					}else if (tagName.getMultiTags() != null) {
-						ArrayList<String> currentList;
-						ArrayList<String> tags = tagName.getMultiTags();
-						for (String tag : tags) {
-							currentList = new ArrayList<String>();
-							if(textToVariables.containsKey(tag)) {
-								currentList = textToVariables.get(tag);
-							}
-							testCode.addStep(tag, currentList);
-						}
-					}
-				}
-			}
+			CodeContainer testCode = extractCode();
 			System.out.print(testCode.toString() + "\n");
 
 			//step two send them to the service to gather the code snipets
@@ -210,11 +174,41 @@ public class mywebapp implements EntryPoint {
     	}
     }
 
+    class SaveHandler implements ClickHandler{
+
+		@Override
+		public void onClick(ClickEvent event) {
+		    if (mywebapp.this.codeBuildingService == null) {
+		    	mywebapp.this.codeBuildingService = GWT.create(SetupBuilderService.class);
+		    }
+
+			CodeContainer testCode = extractCode();
+
+			AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
+
+				@Override
+				public void onFailure(Throwable caught) {
+					System.out.print("Failure!");
+				}
+
+				@Override
+				public void onSuccess(Boolean result) {
+					if(result.booleanValue()) {
+						System.out.print("Exception!");
+					}
+				}
+			};
+			mywebapp.this.codeBuildingService.saveTest(Integer.valueOf(testNumber.getText()).intValue(), testCode.toString(), callback);
+		}
+	}
+
     // Add a handler to send the name to the server
     TreeHandler tHandler = new TreeHandler();
     this.t.addSelectionHandler(tHandler);
     GenerateCodeHandler cHandler = new GenerateCodeHandler();
     generateCode.addClickHandler(cHandler);
+    SaveHandler saveHandler = new SaveHandler();
+    saveButton.addClickHandler(saveHandler);
     ValidationDialog dialogHandler = new ValidationDialog();
     openValidationDialog.addClickHandler(dialogHandler);
     SetupDialog setupHandler = new SetupDialog();
@@ -821,16 +815,19 @@ private String compareChildren(ValidationTreeNode item) {
 	return returnable;
 }
 
-private void builtStepPanel(final Button saveButton, final Button generateCode, final Button editSetup,
-		final LayoutPanel mainPanel, ScrollPanel flexPanel) {
+private void builtStepPanel(final Button saveButton, TextBox testNumber, final Button generateCode,
+		final Button editSetup, final LayoutPanel mainPanel, ScrollPanel flexPanel) {
 	mainPanel.add(saveButton);
 	mainPanel.setWidgetLeftWidth(saveButton, 1, Unit.EM, 10, Unit.EM);
 	mainPanel.setWidgetTopHeight(saveButton, 1, Unit.EM, 3, Unit.EM);
+	mainPanel.add(testNumber);
+	mainPanel.setWidgetLeftWidth(testNumber, 12, Unit.EM, 10, Unit.EM);
+	mainPanel.setWidgetTopHeight(testNumber, 1, Unit.EM, 3, Unit.EM);
 	mainPanel.add(generateCode);
-	mainPanel.setWidgetLeftWidth(generateCode, 12, Unit.EM, 10, Unit.EM);
+	mainPanel.setWidgetLeftWidth(generateCode, 23, Unit.EM, 10, Unit.EM);
 	mainPanel.setWidgetTopHeight(generateCode, 1, Unit.EM, 3, Unit.EM);
 	mainPanel.add(editSetup);
-	mainPanel.setWidgetLeftWidth(editSetup, 23, Unit.EM, 10, Unit.EM);
+	mainPanel.setWidgetLeftWidth(editSetup, 34, Unit.EM, 10, Unit.EM);
 	mainPanel.setWidgetTopHeight(editSetup, 1, Unit.EM, 3, Unit.EM);
 	flexPanel.add(this.stepFlexTable);
 	flexPanel.ensureVisible(this.stepFlexTable);
@@ -1175,6 +1172,51 @@ private void resetSetupTree(final LayoutPanel panel, final Tree setupTree,
 		setupTree.setSelectedItem(selectedItem);
 		setupTree.getSelectedItem().setState(selected.getState());
 	}
+}
+
+private CodeContainer extractCode() {
+	CodeContainer testCode = new CodeContainer();
+	String id = "";
+	HashMap<String, ArrayList<String>> textToVariables = new HashMap<String, ArrayList<String>>();
+	ArrayList<String> variables = new ArrayList<String>();
+	FlexTable instructionTable = getStepFlexTable();
+	for(int a = 1; a < instructionTable.getRowCount(); a++) {
+		if(a != getSetupRow()) {
+			int b = 0;
+			Widget w = instructionTable.getWidget(a, b);
+			while(!(w instanceof StepHolder)) {
+				if(instructionTable.getWidget(a, b) == null) {
+					b++;
+					w = instructionTable.getWidget(a, b);
+				} else {
+					variables = new ArrayList<String>();
+					while(w instanceof TextboxIDHolder) {
+						TextboxIDHolder box = (TextboxIDHolder)w;
+						variables.add(box.getText());
+						id = box.getTagID();
+						b++;
+						w = instructionTable.getWidget(a, b);
+					}
+					textToVariables.put(id, variables);
+				}
+			}
+			StepHolder tagName = (StepHolder)w;
+			if(tagName.getTagID() != null) {
+				testCode.addStep(tagName.getTagID(), variables);
+			}else if (tagName.getMultiTags() != null) {
+				ArrayList<String> currentList;
+				ArrayList<String> tags = tagName.getMultiTags();
+				for (String tag : tags) {
+					currentList = new ArrayList<String>();
+					if(textToVariables.containsKey(tag)) {
+						currentList = textToVariables.get(tag);
+					}
+					testCode.addStep(tag, currentList);
+				}
+			}
+		}
+	}
+	return testCode;
 }
 }
 

@@ -48,4 +48,38 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 
 	  return returnable;
   }
+@Override
+public Boolean saveTest(int testNumber, String testSteps) {
+	  Boolean exception = Boolean.FALSE;
+	  try {
+		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
+		  "databaseName=Rain;user=sa;password=stuffy;";
+		  Connection conn = DriverManager.getConnection(url);
+		  Statement stmt = conn.createStatement();
+		  String sql = "";
+		  sql = "UPDATE dbo.Tests SET " +
+		  "Steps = '" + testSteps + "' " +
+		  "WHERE TestNumber = '" + testNumber + "'";
+		  int success = stmt.executeUpdate(sql);
+		  if(success == 0) {
+			  sql = "INSERT INTO dbo.Tests " +
+			  "(TestNumber, Steps) values (" +
+			  "'" + testNumber + "', " +
+			  "'" + testSteps + "' " +
+			  ") ";
+			  success = stmt.executeUpdate(sql);
+		  }
+		  conn.close();
+	  } catch (InstantiationException e) {
+		  exception = Boolean.TRUE;
+	  } catch (IllegalAccessException e) {
+		  exception = Boolean.TRUE;
+	  } catch (ClassNotFoundException e) {
+		  exception = Boolean.TRUE;
+	  } catch (SQLException e) {
+		  exception = Boolean.TRUE;
+	  }
+	  return exception;
+}
 }

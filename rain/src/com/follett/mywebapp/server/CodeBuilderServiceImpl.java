@@ -40,7 +40,8 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 	  try {
 		  conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
-		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.Code ORDER BY tagID");
+		  @SuppressWarnings("unused")
+		ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.Code ORDER BY tagID");
 	  } catch (SQLException e) {
 		  // TODO Auto-generated catch block
 		  e.printStackTrace();
@@ -48,8 +49,8 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 
 	  return returnable;
   }
-@Override
-public Boolean saveTest(int testNumber, String testSteps) {
+  @Override
+  public Boolean saveTest(int testNumber, String testSteps) {
 	  Boolean exception = Boolean.FALSE;
 	  try {
 		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
@@ -81,5 +82,36 @@ public Boolean saveTest(int testNumber, String testSteps) {
 		  exception = Boolean.TRUE;
 	  }
 	  return exception;
-}
+  }
+
+  @Override
+  public Boolean doesTextExist(int testNumber) {
+	  Boolean exists = Boolean.FALSE;
+	  try {
+		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
+		  "databaseName=Rain;user=sa;password=stuffy;";
+		  Connection conn = DriverManager.getConnection(url);
+		  Statement stmt = conn.createStatement();
+		  String sql = "SELECT COUNT(*) as \"TestExists\"\r\n" +
+		  		"FROM dbo.tests\r\n" +
+		  		"WHERE TestNumber = " + testNumber + ";";
+		  ResultSet rs = stmt.executeQuery(sql);
+		  if(rs.next()) {
+			  if(rs.getInt("TestExists") > 0) {
+				  exists = Boolean.TRUE;
+			  }
+		  }
+		  conn.close();
+	  } catch (InstantiationException e) {
+		  exists = Boolean.FALSE;
+	  } catch (IllegalAccessException e) {
+		  exists = Boolean.FALSE;
+	  } catch (ClassNotFoundException e) {
+		  exists = Boolean.FALSE;
+	  } catch (SQLException e) {
+		  exists = Boolean.FALSE;
+	  }
+	  return exists;
+  }
 }

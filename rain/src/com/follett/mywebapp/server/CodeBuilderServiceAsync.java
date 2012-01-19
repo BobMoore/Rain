@@ -8,4 +8,5 @@ public interface CodeBuilderServiceAsync {
 
   void getCodePieces(AsyncCallback<ArrayList<String>> callback);
   void saveTest(int testNumber, String testSteps, AsyncCallback<Boolean> callback);
+  void doesTextExist(int TestNumber, AsyncCallback<Boolean> callback);
 }

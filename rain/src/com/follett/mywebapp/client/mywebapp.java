@@ -33,6 +33,7 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.LayoutPanel;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
@@ -75,6 +76,7 @@ public class mywebapp implements EntryPoint {
 
 	    final Button saveButton = new Button("Save Test");
 	    final TextBox testNumber = new TextBox();
+	    final Button loadTest = new Button("Load Test");
 	    final Button generateCode = new Button("Generate Code");
 	    final Button editSetup = new Button("Edit Setup");
 	    final LayoutPanel mainPanel = new LayoutPanel();
@@ -96,7 +98,7 @@ public class mywebapp implements EntryPoint {
 		this.treePanel.setWidgetLeftWidth(openValidationDialog, 1, Unit.EM, 15, Unit.EM);
 		this.treePanel.setWidgetBottomHeight(openValidationDialog, 1, Unit.EM, 3, Unit.EM);
 
-		builtStepPanel(saveButton, testNumber, generateCode, editSetup, mainPanel, flexPanel);
+		builtStepPanel(saveButton, testNumber, generateCode, editSetup, mainPanel, flexPanel, loadTest);
 
 	    buildMainPanel(mainPanel, this.setupPanel, testDevelopementPanel, this.treePanel);
 
@@ -148,9 +150,6 @@ public class mywebapp implements EntryPoint {
 
     	DialogBox dialog;
 
-    	public ValidationDialog() {
-    	}
-
 		@Override
 		public void onClick(ClickEvent event) {
 			this.dialog = createValidationDialogBox();
@@ -163,12 +162,21 @@ public class mywebapp implements EntryPoint {
 
     	DialogBox dialog;
 
-    	public SetupDialog() {
-    	}
-
     	@Override
     	public void onClick(ClickEvent event) {
     		this.dialog = createSetupDialogBox();
+    		this.dialog.show();
+    		this.dialog.center();
+    	}
+    }
+
+    class LoadDialog implements ClickHandler {
+
+    	DialogBox dialog;
+
+    	@Override
+    	public void onClick(ClickEvent event) {
+    		this.dialog = createLoadDialog();
     		this.dialog.show();
     		this.dialog.center();
     	}
@@ -213,9 +221,83 @@ public class mywebapp implements EntryPoint {
     openValidationDialog.addClickHandler(dialogHandler);
     SetupDialog setupHandler = new SetupDialog();
     editSetup.addClickHandler(setupHandler);
+    LoadDialog loadTestHandler = new LoadDialog();
+    loadTest.addClickHandler(loadTestHandler);
   }
 
-  private DialogBox createValidationDialogBox() {
+  public DialogBox createLoadDialog() {
+	    // Create a dialog box and set the caption text
+	    final DialogBox dialogBox = new DialogBox(false);
+
+	    Button closeButton = new Button(
+	            "Close", new ClickHandler() {
+	              public void onClick(ClickEvent event) {
+	                dialogBox.hide();
+	              }
+	            });
+
+	    //evaluate the size of their window and make this the bulk of it.
+	    dialogBox.setWidget(buildLoadTestDialog(closeButton));
+	    dialogBox.setGlassEnabled(true);
+
+	    return dialogBox;
+}
+
+private LayoutPanel buildLoadTestDialog(final Button closeButton) {
+	LayoutPanel panel = new LayoutPanel();
+	panel.setSize("90px", "160px");
+	Label label = new Label();
+	label.setText("Test Number:");
+	panel.add(label);
+	panel.setWidgetTopHeight(label, 1, Unit.PX, 20, Unit.PX);
+	final TextBox testNumber = new TextBox();
+	panel.add(testNumber);
+	panel.setWidgetTopHeight(testNumber, 21, Unit.PX, 30, Unit.PX);
+	final Label errorLabel = new Label();
+	panel.add(errorLabel);
+	panel.setWidgetTopHeight(errorLabel, 51, Unit.PX, 47, Unit.PX);
+
+	class TestLoader implements ClickHandler{
+
+		@Override
+		public void onClick(ClickEvent event) {
+			if (mywebapp.this.codeBuildingService == null) {
+				mywebapp.this.codeBuildingService = GWT.create(CodeBuilderService.class);
+		    }
+
+		    // Set up the callback object.
+		    AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
+		    	@Override
+		    	public void onFailure(Throwable caught) {
+		    	}
+
+		    	@Override
+		    	public void onSuccess(Boolean result) {
+		    		if(result.booleanValue()) {
+		    			closeButton.click();
+		    		} else {
+		    			errorLabel.setText("Test is not there!");
+		    		}
+		    	}
+		    };
+		    try {
+		    	mywebapp.this.codeBuildingService.doesTextExist(Integer.valueOf(testNumber.getText()).intValue(), callback);
+		    } catch (NumberFormatException e) {
+		    	errorLabel.setText("Bad test number");
+		    }
+		}
+	}
+	Button loadTest = new Button("Load");
+	TestLoader loader = new TestLoader();
+	loadTest.addClickHandler(loader);
+	panel.add(loadTest);
+	panel.setWidgetBottomHeight(loadTest, 32, Unit.PX, 30, Unit.PX);
+	panel.add(closeButton);
+	panel.setWidgetBottomHeight(closeButton, 1, Unit.PX, 30, Unit.PX);
+	return panel;
+}
+
+private DialogBox createValidationDialogBox() {
 	    // Create a dialog box and set the caption text
 	    final DialogBox dialogBox = new DialogBox(false);
 
@@ -816,18 +898,21 @@ private String compareChildren(ValidationTreeNode item) {
 }
 
 private void builtStepPanel(final Button saveButton, TextBox testNumber, final Button generateCode,
-		final Button editSetup, final LayoutPanel mainPanel, ScrollPanel flexPanel) {
+		final Button editSetup, final LayoutPanel mainPanel, ScrollPanel flexPanel, Button loadTest) {
 	mainPanel.add(saveButton);
 	mainPanel.setWidgetLeftWidth(saveButton, 1, Unit.EM, 10, Unit.EM);
 	mainPanel.setWidgetTopHeight(saveButton, 1, Unit.EM, 3, Unit.EM);
 	mainPanel.add(testNumber);
 	mainPanel.setWidgetLeftWidth(testNumber, 12, Unit.EM, 10, Unit.EM);
 	mainPanel.setWidgetTopHeight(testNumber, 1, Unit.EM, 3, Unit.EM);
+	mainPanel.add(loadTest);
+	mainPanel.setWidgetLeftWidth(loadTest, 23, Unit.EM, 10, Unit.EM);
+	mainPanel.setWidgetTopHeight(loadTest, 1, Unit.EM, 3, Unit.EM);
 	mainPanel.add(generateCode);
-	mainPanel.setWidgetLeftWidth(generateCode, 23, Unit.EM, 10, Unit.EM);
+	mainPanel.setWidgetLeftWidth(generateCode, 34, Unit.EM, 10, Unit.EM);
 	mainPanel.setWidgetTopHeight(generateCode, 1, Unit.EM, 3, Unit.EM);
 	mainPanel.add(editSetup);
-	mainPanel.setWidgetLeftWidth(editSetup, 34, Unit.EM, 10, Unit.EM);
+	mainPanel.setWidgetLeftWidth(editSetup, 45, Unit.EM, 10, Unit.EM);
 	mainPanel.setWidgetTopHeight(editSetup, 1, Unit.EM, 3, Unit.EM);
 	flexPanel.add(this.stepFlexTable);
 	flexPanel.ensureVisible(this.stepFlexTable);

@@ -12,7 +12,6 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 /**
  * The server side implementation of the RPC service.
  */
-@SuppressWarnings("serial")
 public class CodeBuilderServiceImpl extends RemoteServiceServlet implements CodeBuilderService {
 
   private static final long serialVersionUID = 1L;

@@ -60,7 +60,7 @@ public class mywebapp implements EntryPoint {
 	private int startKey = 10;
 	private Tree t;
 	private LayoutPanel treePanel;
-	private TabLayoutPanel setupPanel;
+	private LayoutPanel setupPanel;
 
 	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
 	private SetupBuilderServiceAsync setupBuildingService = GWT.create(SetupBuilderService.class);
@@ -76,7 +76,8 @@ public class mywebapp implements EntryPoint {
 	    final LayoutPanel mainPanel = new LayoutPanel();
 	    this.treePanel = new LayoutPanel();
 	    final ScrollPanel flexPanel = new ScrollPanel();
-	    this.setupPanel = buildSetupPanel();
+	    this.setupPanel = new LayoutPanel();
+	    this.setupPanel.add(buildSetupPanel());
 	    final SplitLayoutPanel testDevelopementPanel = new SplitLayoutPanel();
 	    final Button openValidationDialog = new Button("Edit Validation Steps");
 	    setStepFlexTable(new FlexTable());
@@ -93,7 +94,7 @@ public class mywebapp implements EntryPoint {
 
 		builtStepPanel(saveButton, generateCode, editSetup, mainPanel, flexPanel);
 
-	    buildMainPanel(mainPanel, setupPanel, testDevelopementPanel, this.treePanel);
+	    buildMainPanel(mainPanel, this.setupPanel, testDevelopementPanel, this.treePanel);
 
 	    buildStepTable();
 
@@ -211,7 +212,7 @@ public class mywebapp implements EntryPoint {
 
     // Add a handler to send the name to the server
     TreeHandler tHandler = new TreeHandler();
-    t.addSelectionHandler(tHandler);
+    this.t.addSelectionHandler(tHandler);
     GenerateCodeHandler cHandler = new GenerateCodeHandler();
     generateCode.addClickHandler(cHandler);
     ValidationDialog dialogHandler = new ValidationDialog();
@@ -259,7 +260,8 @@ private DialogBox createSetupDialogBox() {
   }
 
 private void resetSetup() {
-	this.setupPanel = buildSetupPanel();
+	this.setupPanel.remove(0);
+	this.setupPanel.add(buildSetupPanel());
 }
 
 private LayoutPanel buildSetupSetup(Button closeButton) {
@@ -426,6 +428,8 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 
 			String tabName;
 
+			//This needs to have duplicate column name checking
+
 			public TabEnterPressHandler(String tabName) {
 				this.tabName = tabName;
 			}
@@ -435,7 +439,7 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 				Object source = event.getSource();
 				if(source instanceof TextBox) {
 					if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
-						addData((TextBox)source);
+						addData();
 					}
 					if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_TAB) {
 						//Tab is firing a blurring event... the jerk
@@ -447,15 +451,14 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 			public void onBlur(BlurEvent event) {
 				Object source = event.getSource();
 				if(source instanceof TextBox) {
-					TextBox sourceBox = (TextBox)source;
 					if(event.getNativeEvent().getKeyCode() != KeyCodes.KEY_ENTER &&
 						event.getNativeEvent().getKeyCode() != KeyCodes.KEY_TAB) {
-						addData((TextBox)source);
+						addData();
 					}
 				}
 			}
 
-			private void addData(TextBox source) {
+			private void addData() {
 				ArrayList<String> columns = new ArrayList<String>();
 				String columnToAdd;
 				String newTabName;
@@ -488,7 +491,7 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 				Object source = event.getSource();
 				if(source instanceof TextBox) {
 					if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
-						addData((TextBox)source);
+						addData();
 					}
 				}
 			}
@@ -497,11 +500,11 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 			public void onBlur(BlurEvent event) {
 				Object source = event.getSource();
 				if(source instanceof TextBox) {
-					addData((TextBox)source);
+					addData();
 				}
 			}
 
-			private void addData(TextBox source) {
+			private void addData() {
 				ArrayList<TableData> columnData = new ArrayList<TableData>();
 				String tagID;
 				String label;
@@ -551,7 +554,7 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 		    	mywebapp.this.setupBuildingService = GWT.create(SetupBuilderService.class);
 		    }
 
-			AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
+			AsyncCallback<Boolean> callbackSave = new AsyncCallback<Boolean>() {
 
 				@Override
 				public void onFailure(Throwable caught) {
@@ -565,7 +568,7 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 					}
 				}
 			};
-			mywebapp.this.setupBuildingService.saveSetupData(allData, callback);
+			mywebapp.this.setupBuildingService.saveSetupData(allData, callbackSave);
 			mywebapp.this.setupBuildingService = null;
 		}
 	}
@@ -837,7 +840,7 @@ private void builtStepPanel(final Button saveButton, final Button generateCode, 
 }
 
 private Tree buildTree() {
-	final Tree t = new Tree();
+	final Tree newTree = new Tree();
 	// Initialize the service proxy.
     if (this.treeBuildingService == null) {
     	this.treeBuildingService = GWT.create(TreeBuilderService.class);
@@ -846,7 +849,7 @@ private Tree buildTree() {
     // Set up the callback object.
     AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>> callback = new AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>>() {
       public void onFailure(Throwable caught) {
-    	  t.addItem("Failure!");
+    	  newTree.addItem("Failure!");
       }
 
 	@Override
@@ -857,7 +860,7 @@ private Tree buildTree() {
 			if(result.containsKey(node.getTagID())) {
 				addChildrenToTree(node, result);
 			}
-			t.addItem(node);
+			newTree.addItem(node);
 		}
 	}
 
@@ -873,11 +876,11 @@ private Tree buildTree() {
 	}
     };
     this.treeBuildingService.getTreeItems(callback);
-    return t;
+    return newTree;
 }
 
 private TabLayoutPanel buildSetupPanel() {
-	final TabLayoutPanel setupPanel = new TabLayoutPanel(.7, Unit.CM);
+	final TabLayoutPanel localSetupPanel = new TabLayoutPanel(.7, Unit.CM);
 
 	// Initialize the service proxy.
     if (this.setupBuildingService == null) {
@@ -895,7 +898,7 @@ private TabLayoutPanel buildSetupPanel() {
     	  for (String tab : tabList) {
     		  LayoutPanel panel = new LayoutPanel();
     		  buildPanel(panel, result.getColumnsOnTab(tab), result.getData());
-    		  setupPanel.add(panel, tab);
+    		  localSetupPanel.add(panel, tab);
     	  }
       }
 
@@ -996,13 +999,13 @@ private TabLayoutPanel buildSetupPanel() {
       }
     };
     this.setupBuildingService.getSetupData(callback);
-	return setupPanel;
+	return localSetupPanel;
 }
 
-private void buildMainPanel(final LayoutPanel mainPanel, final TabLayoutPanel setupPanel,
+private void buildMainPanel(final LayoutPanel mainPanel, final LayoutPanel localSetupPanel,
 		SplitLayoutPanel p, LayoutPanel westPanel) {
 	p.addWest(westPanel, 256);
-	p.addNorth(setupPanel, 256);
+	p.addNorth(localSetupPanel, 256);
 	p.add(mainPanel);
 }
 
@@ -1047,7 +1050,7 @@ public void resetTree() {
 	this.t = buildTree();
 	this.treePanel.add(this.t);
 	this.treePanel.setWidgetLeftWidth(this.t, 0, Unit.PX, 256, Unit.PX);
-	this.treePanel.setWidgetTopHeight(this.t, 0, Unit.EM, 100, Unit.EM);
+	this.treePanel.setWidgetTopHeight(this.t, 0, Unit.PX, 768, Unit.PX);
 }
 
 public void setEditTree(boolean editTree) {

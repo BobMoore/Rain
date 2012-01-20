@@ -5,8 +5,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 
+import com.follett.mywebapp.util.TableData;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
@@ -19,18 +19,15 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
    * Implement the connection to the server and gather the necessary data
    * */
   @Override
-  public ArrayList<String> getCodePieces() {
-	  ArrayList<String> returnable = new ArrayList<String>();
+  public TableData getSetupPiece(String tagID) {
+	  TableData returnable = null;
 	  try {
 		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
 	  } catch (InstantiationException e) {
-		  // TODO Auto-generated catch block
 		  e.printStackTrace();
 	  } catch (IllegalAccessException e) {
-		  // TODO Auto-generated catch block
 		  e.printStackTrace();
 	  } catch (ClassNotFoundException e) {
-		  // TODO Auto-generated catch block
 		  e.printStackTrace();
 	  }
 	  // TODO get tree items and build them into the tree
@@ -40,15 +37,21 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 	  try {
 		  conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
-		  @SuppressWarnings("unused")
-		ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.Code ORDER BY tagID");
+		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.Setup WHERE tagID = '" + tagID + "'");
+		  if(rs.next()) {
+			  returnable = new TableData(
+					  rs.getString("tagID"),
+					  rs.getString("label"),
+					  rs.getBoolean("checkbox"),
+					  Integer.valueOf(rs.getInt("textfields")));
+			  returnable.addDescriptions(rs.getString("fieldDescriptions"));
+		  }
 	  } catch (SQLException e) {
-		  // TODO Auto-generated catch block
 		  e.printStackTrace();
 	  }
-
 	  return returnable;
   }
+
   @Override
   public Boolean saveTest(int testNumber, String testSteps) {
 	  Boolean exception = Boolean.FALSE;

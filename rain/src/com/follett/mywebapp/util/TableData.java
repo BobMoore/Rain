@@ -83,4 +83,9 @@ public class TableData implements Serializable{
 	public void setCheckbox(boolean checkbox) {
 		this.checkbox = checkbox;
 	}
+
+	@Override
+	public String toString() {
+		return "Label: " + label + " TagID: " + tagID;
+	}
 }

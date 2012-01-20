@@ -36,7 +36,6 @@ public class ValidationTreeDataItem implements Serializable{
 		this.description = item.getText();
 		this.fields = item.getFields();
 		this.descriptions = item.getDescriptions();
-
 	}
 
 	public void addDescriptions(String fieldDescriptions) {

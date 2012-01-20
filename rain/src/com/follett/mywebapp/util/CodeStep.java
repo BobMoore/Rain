@@ -1,49 +1,55 @@
 package com.follett.mywebapp.util;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
 
 public class CodeStep {
 
 	private String tagID;
-	private HashMap<String, ArrayList<String>> multiTags;
 	private ArrayList<String> variables;
+	private ArrayList<SingleTag> multiTag;
 
 	public CodeStep() {
 		this.tagID = null;
 		this.variables = null;
-		this.multiTags = null;
+		this.multiTag = new ArrayList<SingleTag>();
 	}
 
 	public CodeStep (String tagID, ArrayList<String> variables) {
 		this.tagID = tagID;
 		this.variables = variables;
-		this.multiTags = null;
+		this.multiTag = null;
 	}
 
-	public CodeStep (HashMap<String, ArrayList<String>> step) {
-		this.tagID = null;
-		this.multiTags = step;
+	public void addTag(String tag, ArrayList<String> params) {
+		this.multiTag.add(new SingleTag(tag, params));
+	}
+
+	public char getFirstChar() {
+		char returnable = '~';
+		if(this.tagID != null) {
+			returnable = this.tagID.charAt(0);
+		} else {
+			//this could have an empty multiTag variable... but not likely
+			returnable = this.multiTag.get(0).getTag().charAt(0);
+		}
+		return returnable;
 	}
 
 	@Override
 	public String toString() {
 		String returnable = "";
 		if(this.tagID == null) {
-			Set<String> tags = this.multiTags.keySet();
 			returnable = "[";
 			boolean firstTag = true;
-			for (String tag : tags) {
+			for (SingleTag tag : this.multiTag) {
 				if(firstTag) {
-					returnable += tag + " [";
+					returnable += tag.getTag() + " [";
 					firstTag = false;
 				} else {
-					returnable += ", " + tag + " [";
+					returnable += ", " + tag.getTag() + " [";
 				}
-				ArrayList<String> params = this.multiTags.get(tag);
 				boolean firstParam = true;
-				for (String param : params) {
+				for (String param : tag.getParams()) {
 					if(firstParam) {
 						returnable += param;
 						firstTag = false;
@@ -58,5 +64,17 @@ public class CodeStep {
 			returnable = this.tagID + " " + this.variables.toString();
 		}
 		return returnable;
+	}
+
+	public String getTagID() {
+		return this.tagID;
+	}
+
+	public ArrayList<String> getVariables() {
+		return this.variables;
+	}
+
+	public ArrayList<SingleTag> getMultiTag() {
+		return this.multiTag;
 	}
 }

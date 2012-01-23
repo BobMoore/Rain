@@ -14,6 +14,10 @@ public class CodeContainer {
 		this.steps.add(new CodeStep(tagID, variables));
 	}
 
+	public void addStep(CodeStep step) {
+		this.steps.add(step);
+	}
+
 	public ArrayList<CodeStep> getStepList(){
 		return this.steps;
 	}

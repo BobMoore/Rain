@@ -14,6 +14,7 @@ import com.follett.mywebapp.util.CodeStep;
 import com.follett.mywebapp.util.SetupDataItem;
 import com.follett.mywebapp.util.SingleTag;
 import com.follett.mywebapp.util.StepHolder;
+import com.follett.mywebapp.util.StepTableData;
 import com.follett.mywebapp.util.TableData;
 import com.follett.mywebapp.util.TextboxIDHolder;
 import com.follett.mywebapp.util.ValidationTreeDataItem;
@@ -57,8 +58,8 @@ public class mywebapp implements EntryPoint {
    * returns an error.
    */
 	private FlexTable stepFlexTable;
-	private int setupRow = 1;
-	private int validationRow = 1;
+	private int setupRow = 0;
+	private int validationRow = 0;
 	private boolean editTree = false;
 	private ArrayList<String> validationSteps = new ArrayList<String>();
 	private ArrayList<String> identifierKey = new ArrayList<String>();
@@ -66,6 +67,7 @@ public class mywebapp implements EntryPoint {
 	private Tree t;
 	private LayoutPanel treePanel;
 	private LayoutPanel setupPanel;
+	private int loadStatus = 0;
 
 	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
 	private SetupBuilderServiceAsync setupBuildingService = GWT.create(SetupBuilderService.class);
@@ -261,7 +263,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 	class TestLoader implements ClickHandler{
 
 		private int columnIndex;
-		private SingleTag currentTag;
+		private ArrayList<SingleTag> currentTag;
 
 		@Override
 		public void onClick(ClickEvent event) {
@@ -300,64 +302,122 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 				public void onSuccess(String result) {
 					buildStepTable();
 					ArrayList<CodeStep> steps = parseSteps(result);
-					for (CodeStep step : steps) {
-						System.out.print("\n" + step + " ");
-						char firstChar = step.getFirstChar();
-						if(firstChar >= 'a' && firstChar <= 'Z') {
-							//validation step, no possibility for multitags
-						} else {
-							final ArrayList<SingleTag> multipleTags = step.getMultiTag();
-							TestLoader.this.columnIndex = 0;
-							final StepHolder removeStepButton = new StepHolder("x");
-							getStepFlexTable().insertRow(getSetupRow());
 
-							AsyncCallback<TableData> callbackStep = new AsyncCallback<TableData>() {
+					AsyncCallback<ArrayList<StepTableData>> callbackStep = new AsyncCallback<ArrayList<StepTableData>>() {
 
-								@Override
-								public void onFailure(Throwable caught) {
-								}
-								@Override
-								public void onSuccess(TableData dataResult) {
-									String stepLabel = dataResult.getLabel();
-									getStepFlexTable().setText(getSetupRow(), TestLoader.this.columnIndex, stepLabel);
-									TestLoader.this.columnIndex++;
-									if(dataResult.getTextfields() != null) {
-										ArrayList<String> descriptions = dataResult.getDescriptions();
-										ArrayList<String> params = TestLoader.this.currentTag.getParams();
-										for(int a = 0; a < dataResult.getTextfields().intValue(); a++) {
-											TextboxIDHolder box = new TextboxIDHolder(dataResult.getTagID());
-											if(a < descriptions.size()) {
-												box.setTitle(descriptions.get(a));
-											}
-											if(a < params.size()) {
-												box.setText(params.get(a));
-											}
-											getStepFlexTable().setWidget(getSetupRow(), TestLoader.this.columnIndex, box);
-											TestLoader.this.columnIndex++;
-										}
+						boolean firstStep = true;
+
+						@Override
+						public void onFailure(Throwable caught) {
+						}
+
+						@Override
+						public void onSuccess(ArrayList<StepTableData> dataResult) {
+							int paramIndex = 0;
+							int currentRow = 0;
+							StepHolder removeStepButton = null;
+							for (StepTableData data : dataResult) {
+								if(!this.firstStep && data.isNewStep()) {
+									getStepFlexTable().setWidget(currentRow, TestLoader.this.columnIndex, removeStepButton);
+									if(data.isSetup()) {
+										bumpSetupRow();
+									} else {
+										bumpValidationRow();
 									}
-									removeStepButton.addTagID(dataResult.getTagID());
 								}
-							};
-							if(multipleTags != null) {
-								for (SingleTag tag : multipleTags) {
-									TestLoader.this.currentTag = tag;
-									System.out.print("\nCalling for tagID: " + tag.getTag());
-									mywebapp.this.codeBuildingService.getSetupPiece(tag.getTag(), callbackStep);
+								currentRow = (data.isSetup()) ? getSetupRow(): getValidationRow();
+								if(data.isNewStep()) {
+									removeStepButton = new StepHolder("x");
+									bumpStartKey();
+									addIdentifierKey(currentRow, getStartKey() + "");
+									removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + "", 0));
+									getStepFlexTable().insertRow(currentRow);
+									TestLoader.this.columnIndex = 0;
+									paramIndex = 0;
+									this.firstStep = false;
 								}
-							}else {
-								TestLoader.this.currentTag = new SingleTag(step.getTagID(), step.getVariables());
-								System.out.print("\nCalling for tagID: " + step.getTagID());
-								mywebapp.this.codeBuildingService.getSetupPiece(step.getTagID(), callbackStep);
+								String stepLabel = data.getLabel();
+								getStepFlexTable().setText(currentRow, TestLoader.this.columnIndex, stepLabel);
+								TestLoader.this.columnIndex++;
+								if(data.getTextfields() != null) {
+									ArrayList<String> descriptions = data.getDescriptions();
+									ArrayList<String> params = new ArrayList<String>();
+									if(TestLoader.this.currentTag.size() < paramIndex) {
+										 params = TestLoader.this.currentTag.get(paramIndex).getParams();
+									}
+									for(int a = 0; a < data.getTextfields().intValue(); a++) {
+										TextboxIDHolder box = new TextboxIDHolder(data.getTagID());
+										if(a < descriptions.size()) {
+											box.setTitle(descriptions.get(a));
+										}
+										if(a < params.size()) {
+											box.setText(params.get(a));
+										}
+										getStepFlexTable().setWidget(currentRow, TestLoader.this.columnIndex, box);
+										TestLoader.this.columnIndex++;
+									}
+								}
+								removeStepButton.addTagID(data.getTagID());
+								paramIndex++;
 							}
-							removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + "", 0));
-							getStepFlexTable().setWidget(getSetupRow(), TestLoader.this.columnIndex, removeStepButton);
-							addIdentifierKey(getSetupRow(), getStartKey() + "");
-							bumpSetupRow();
-							bumpStartKey();
-							TestLoader.this.columnIndex = 0;
+							if(removeStepButton != null) {
+								getStepFlexTable().setWidget(currentRow, TestLoader.this.columnIndex, removeStepButton);
+							}
+						}
+					};
+
+					String tags = "";
+					boolean first = true;
+					boolean vFirst = true;
+					TestLoader.this.currentTag = new ArrayList<SingleTag>();
+					for (CodeStep step : steps) {
+						char firstChar = step.getFirstChar();
+						TestLoader.this.columnIndex = 0;
+						final ArrayList<SingleTag> multipleTags = step.getMultiTag();
+						if(firstChar >= 'a' && firstChar <= 'Z') {
+							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables()));
+							if(first) {
+								if(vFirst) {
+									tags += "Validation, ";
+									vFirst = false;
+								}
+								tags += step.getTagID();
+								first = false;
+							} else {
+								if(vFirst) {
+									tags += "Validation, ";
+									vFirst = false;
+								}
+								tags += ", " + step.getTagID();
+							}
+						} else if (multipleTags == null) {
+							if(!first) {
+								tags += ", ";
+							} else {
+								first = false;
+							}
+							tags += step.getTagID();
+						} else if (multipleTags != null) {
+							if(tags.isEmpty()) {
+								tags += "New Step";
+								first = false;
+							}else {
+								tags += ", New Step";
+							}
+
+							for (SingleTag tag : multipleTags) {
+								TestLoader.this.currentTag.add(tag);
+								if(first) {
+									tags += tag.getTag();
+									first = false;
+								} else {
+									tags += ", " + tag.getTag();
+								}
+							}
 						}
 					}
+					System.out.print("\nSending... " + tags);
+					mywebapp.this.codeBuildingService.getSetupPiece(tags, callbackStep);
 				}
 
 				private ArrayList<CodeStep> parseSteps(String result){
@@ -403,8 +463,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 					ArrayList <String> currentList = new ArrayList<String>();
 					while(params.contains(",")) {
 						currentList.add(params.substring(0, params.indexOf(',')).trim());
-						params = params.substring(params.indexOf(',')).trim();
-						System.out.print("\n"+params);
+						params = params.substring(params.indexOf(',')+1).trim();
 					}
 					if(!params.isEmpty()) {
 						currentList.add(params);
@@ -1229,13 +1288,20 @@ private void buildMainPanel(final LayoutPanel mainPanel, final LayoutPanel local
 }
 
 private void buildStepTable() {
-	getStepFlexTable().clear();
+	int rowCount = getStepFlexTable().getRowCount();
+	for(int a = 0; a < rowCount; a++) {
+		getStepFlexTable().removeRow(0);
+	}
 	getStepFlexTable().setText(0, 0, "Setup Steps");
+	this.identifierKey = new ArrayList<String>();
 	this.validationSteps.add("Setup Steps");
 	this.identifierKey.add("Setup Steps");
 	getStepFlexTable().setText(1, 0, "Validation Steps");
 	this.validationSteps.add("Validation Steps");
 	this.identifierKey.add("Validation Steps");
+	this.setupRow = 1;
+	this.validationRow = 1;
+	this.validationSteps = new ArrayList<String>();
 }
 
 class RemoveStepHandler implements ClickHandler {
@@ -1383,15 +1449,16 @@ private void resetSetupTree(final LayoutPanel panel, final Tree setupTree,
 		setupTree.getSelectedItem().setState(selected.getState());
 	}
 }
-
+//TODO placeholder
 private CodeContainer extractCode() {
+
 	CodeContainer testCode = new CodeContainer();
 	String id = "";
-	HashMap<String, ArrayList<String>> textToVariables = new HashMap<String, ArrayList<String>>();
 	ArrayList<String> variables = new ArrayList<String>();
 	FlexTable instructionTable = getStepFlexTable();
 	for(int a = 1; a < instructionTable.getRowCount(); a++) {
 		if(a != getSetupRow()) {
+			CodeStep step = new CodeStep();
 			int b = 0;
 			Widget w = instructionTable.getWidget(a, b);
 			while(!(w instanceof StepHolder)) {
@@ -1407,26 +1474,39 @@ private CodeContainer extractCode() {
 						b++;
 						w = instructionTable.getWidget(a, b);
 					}
-					textToVariables.put(id, variables);
+					if(!(w instanceof StepHolder)) {
+						step.addTag(id, variables);
+					}
 				}
 			}
 			StepHolder tagName = (StepHolder)w;
 			if(tagName.getTagID() != null) {
 				testCode.addStep(tagName.getTagID(), variables);
-			}else if (tagName.getMultiTags() != null) {
-				ArrayList<String> currentList;
-				ArrayList<String> tags = tagName.getMultiTags();
-				for (String tag : tags) {
-					currentList = new ArrayList<String>();
-					if(textToVariables.containsKey(tag)) {
-						currentList = textToVariables.get(tag);
+			}
+			if (tagName.getMultiTags() != null) {
+				if(step.getMultiTag() != null) {
+					for (SingleTag singleTags : step.getMultiTag()) {
+						if(tagName.getMultiTags().contains(singleTags.getTag())) {
+							tagName.getMultiTags().remove(singleTags.getTag());
+						}
 					}
-					testCode.addStep(tag, currentList);
 				}
+				for (String remainingTag : tagName.getMultiTags()) {
+					step.addTag(remainingTag, null);
+				}
+				testCode.addStep(step);
 			}
 		}
 	}
 	return testCode;
+}
+
+public void alterLoadStatus(int plusOneOrNegitiveOne) {
+	this.loadStatus += plusOneOrNegitiveOne;
+}
+
+public int getLoadStatus() {
+	return this.loadStatus;
 }
 }
 

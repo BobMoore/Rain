@@ -3,30 +3,33 @@ package com.follett.mywebapp.util;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class TableData implements Serializable{
+public class StepTableData implements Serializable{
 
 	private static final long serialVersionUID = 1729345848896800198L;
 
 	private String tagID;
 	private String label;
-	private boolean checkbox;
 	private Integer textfields;
 	private ArrayList<String> descriptions;
+	private boolean newStep = false;
 
-	public TableData () {
+	private boolean setup;
+
+	public StepTableData () {
 		this.tagID = null;
 		this.label = null;
-		this.checkbox = false;
 		this.textfields = null;
+		this.setup = true;
 		this.descriptions = new ArrayList<String>();
 	}
 
-	public TableData (String tagID, String label, boolean checkbox, Integer textfields) {
+	public StepTableData (String tagID, String label, Integer textfields, boolean trueForSetup, boolean newStep) {
 		this.tagID = tagID;
 		this.label = label;
-		this.checkbox = checkbox;
 		this.textfields = textfields;
 		this.descriptions = new ArrayList<String>();
+		this.setup = trueForSetup;
+		this.newStep = newStep;
 	}
 
 	public void addDescriptions(String fieldDescriptions) {
@@ -64,10 +67,6 @@ public class TableData implements Serializable{
 		return this.label;
 	}
 
-	public boolean isCheckbox() {
-		return this.checkbox;
-	}
-
 	public Integer getTextfields() {
 		return this.textfields;
 	}
@@ -80,12 +79,24 @@ public class TableData implements Serializable{
 		this.descriptions = descriptions;
 	}
 
-	public void setCheckbox(boolean checkbox) {
-		this.checkbox = checkbox;
-	}
-
 	@Override
 	public String toString() {
 		return "Label: " + this.label + " TagID: " + this.tagID;
+	}
+
+	public void setSetup(boolean setup) {
+		this.setup = setup;
+	}
+
+	public boolean isSetup() {
+		return this.setup;
+	}
+
+	public void setNewStep(boolean newStep) {
+		this.newStep = newStep;
+	}
+
+	public boolean isNewStep() {
+		return this.newStep;
 	}
 }

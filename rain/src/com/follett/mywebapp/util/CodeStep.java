@@ -21,6 +21,14 @@ public class CodeStep {
 	}
 
 	public void addTag(String tag, ArrayList<String> params) {
+		if(this.multiTag == null) {
+			this.multiTag = new ArrayList<SingleTag>();
+		}
+		if(this.tagID != null) {
+			this.multiTag.add(new SingleTag(this.tagID, this.variables));
+			this.tagID = null;
+			this.variables = null;
+		}
 		this.multiTag.add(new SingleTag(tag, params));
 	}
 
@@ -49,12 +57,14 @@ public class CodeStep {
 					returnable += ", " + tag.getTag() + " [";
 				}
 				boolean firstParam = true;
-				for (String param : tag.getParams()) {
-					if(firstParam) {
-						returnable += param;
-						firstTag = false;
-					} else {
-						returnable += ", " + param;
+				if(tag.getParams() != null) {
+					for (String param : tag.getParams()) {
+						if(firstParam) {
+							returnable += param;
+							firstTag = false;
+						} else {
+							returnable += ", " + param;
+						}
 					}
 				}
 				returnable += "]";

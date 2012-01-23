@@ -5,8 +5,9 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
-import com.follett.mywebapp.util.TableData;
+import com.follett.mywebapp.util.StepTableData;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
@@ -19,8 +20,8 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
    * Implement the connection to the server and gather the necessary data
    * */
   @Override
-  public TableData getSetupPiece(String tagID) {
-	  TableData returnable = null;
+  public ArrayList<StepTableData> getSetupPiece(String tagIDs) {
+	  ArrayList<StepTableData> returnable = new ArrayList<StepTableData>();
 	  try {
 		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
 	  } catch (InstantiationException e) {
@@ -30,21 +31,47 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 	  } catch (ClassNotFoundException e) {
 		  e.printStackTrace();
 	  }
-	  // TODO get tree items and build them into the tree
 	  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
 	  "databaseName=Rain;user=sa;password=stuffy;";
 	  Connection conn;
 	  try {
 		  conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
-		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.Setup WHERE tagID = '" + tagID + "'");
-		  if(rs.next()) {
-			  returnable = new TableData(
-					  rs.getString("tagID"),
-					  rs.getString("label"),
-					  rs.getBoolean("checkbox"),
-					  Integer.valueOf(rs.getInt("textfields")));
-			  returnable.addDescriptions(rs.getString("fieldDescriptions"));
+		  String tag = "";
+		  String table = "Setup";
+		  boolean newStep = false;
+		  while(!tagIDs.isEmpty()) {
+			  if(tagIDs.contains(",")) {
+				  tag = tagIDs.substring(0, tagIDs.indexOf(',')).trim();
+				  tagIDs = tagIDs.substring(tagIDs.indexOf(',') + 1).trim();
+			  } else {
+				  tag = tagIDs.trim();
+				  tagIDs = "";
+			  }
+			  if(tag.equals("Validation")) {
+				  table = "TreeItems";
+			  } else if(tag.equals("New Step")) {
+				  newStep = true;
+			  }	else {
+				  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo." + table + " WHERE tagID = '" + tag + "'");
+				  if(rs.next()) {
+					  StepTableData tempData = new StepTableData(
+							  rs.getString("tagID"),
+							  rs.getString("label"),
+							  Integer.valueOf(rs.getInt("textfields")),
+							  true,
+							  newStep);
+					  if(table == "TreeItems") {
+						  tempData.setSetup(false);
+						  tempData.setNewStep(true);
+					  }
+					  tempData.addDescriptions(rs.getString("fieldDescriptions"));
+					  returnable.add(tempData);
+					  if(newStep == true) {
+						  newStep = false;
+					  }
+				  }
+			  }
 		  }
 	  } catch (SQLException e) {
 		  e.printStackTrace();

@@ -18,4 +18,9 @@ public class SingleTag{
 	public ArrayList<String> getParams() {
 		return this.params;
 	}
+
+	@Override
+	public String toString() {
+		return this.tag + " " + this.params;
+	}
 }

@@ -345,6 +345,8 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 									if(TestLoader.this.currentTag.size() > 0 && data.getTagID().equals(TestLoader.this.currentTag.get(0).getTag())) {
 										 params = TestLoader.this.currentTag.get(0).getParams();
 										 TestLoader.this.currentTag.remove(0);
+									} else {
+										 params = new ArrayList<String>();
 									}
 									for(int a = 0; a < data.getTextfields().intValue(); a++) {
 										TextboxIDHolder box = new TextboxIDHolder(data.getTagID());
@@ -380,6 +382,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 						final ArrayList<SingleTag> multipleTags = step.getMultiTag();
 						if(step.validation()) {
 							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables()));
+							System.out.print("\n(validation)TagID:" + step.getTagID() + " Params" + step.getVariables());
 							if(first) {
 								tags += "New Step, ";
 								if(vFirst) {
@@ -398,6 +401,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 							}
 						} else if (multipleTags == null) {
 							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables()));
+							System.out.print("\n(multiple tags = null)TagID:" + step.getTagID() + " Params" + step.getVariables());
 							if(!first) {
 								tags += ", ";
 							} else {
@@ -414,6 +418,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 
 							for (SingleTag tag : multipleTags) {
 								TestLoader.this.currentTag.add(tag);
+								System.out.print("\n(tag)TagID:" + tag.getTag() + " Params" + tag.getParams());
 								if(first) {
 									tags += tag.getTag();
 									first = false;
@@ -423,7 +428,8 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 							}
 						}
 					}
-					System.out.print("\nSending... " + tags);
+					System.out.print("\n\nSending... " + tags);
+					System.out.print("\nParams..." + TestLoader.this.currentTag.toString());
 					mywebapp.this.codeBuildingService.getSetupPiece(tags, callbackStep);
 				}
 
@@ -441,6 +447,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 							while(result.indexOf(']') > 0) {
 								tagID = result.substring(0, result.indexOf('[')).trim();
 								result = result.substring(result.indexOf('[') + 1).trim();
+								currentList = new ArrayList<String>();
 								if(result.indexOf(']') > 0) {
 									params = result.substring(0, result.indexOf(']'));
 									result = result.substring(result.indexOf(']') + 1);
@@ -452,6 +459,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 						} else {
 							tagID = result.substring(0, result.indexOf('[')).trim();
 							result = result.substring(result.indexOf('[') + 1).trim();
+							currentList = new ArrayList<String>();
 							if(result.indexOf(']') > 0) {
 								params = result.substring(0, result.indexOf(']'));
 								result = result.substring(result.indexOf(']') + 1);
@@ -1458,7 +1466,6 @@ private void resetSetupTree(final LayoutPanel panel, final Tree setupTree,
 }
 //TODO placeholder
 private CodeContainer extractCode() {
-
 	CodeContainer testCode = new CodeContainer();
 	String id = "";
 	ArrayList<String> variables = new ArrayList<String>();
@@ -1469,11 +1476,11 @@ private CodeContainer extractCode() {
 			int b = 0;
 			Widget w = instructionTable.getWidget(a, b);
 			while(!(w instanceof StepHolder)) {
+				variables = new ArrayList<String>();
 				if(instructionTable.getWidget(a, b) == null) {
 					b++;
 					w = instructionTable.getWidget(a, b);
 				} else {
-					variables = new ArrayList<String>();
 					while(w instanceof TextboxIDHolder) {
 						TextboxIDHolder box = (TextboxIDHolder)w;
 						variables.add(box.getText());
@@ -1489,8 +1496,12 @@ private CodeContainer extractCode() {
 			StepHolder tagName = (StepHolder)w;
 			if(tagName.getTagID() != null) {
 				testCode.addStep(tagName.getTagID(), variables);
+				variables = new ArrayList<String>();
+			}else if (tagName.getMultiTags() != null && tagName.getMultiTags().size() == 1) {
+				testCode.addStep(id, variables);
+				variables = new ArrayList<String>();
 			}
-			if (tagName.getMultiTags() != null) {
+			if (tagName.getMultiTags() != null && tagName.getMultiTags().size() != 1) {
 				CodeStep newStep = new CodeStep();
 				SingleTag single;
 				if(step.getMultiTag() != null && step.getMultiTag().size() > 0) {

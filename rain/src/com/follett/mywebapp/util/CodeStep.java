@@ -45,7 +45,7 @@ public class CodeStep {
 	@Override
 	public String toString() {
 		String returnable = "";
-		if(this.tagID == null && this.multiTag.size() > 1) {
+		if(this.tagID == null && (this.multiTag != null && this.multiTag.size() > 1)) {
 			returnable = "[";
 			boolean firstTag = true;
 			for (SingleTag tag : this.multiTag) {
@@ -62,7 +62,7 @@ public class CodeStep {
 				}
 			}
 			returnable += "]";
-		} else if(this.tagID == null && this.multiTag.size() == 1) {
+		} else if(this.tagID == null && (this.multiTag != null && this.multiTag.size() == 1)) {
 			ArrayList<String> params = this.multiTag.get(0).getParams();
 			returnable = this.multiTag.get(0).getTag() + " ";
 			returnable += (params != null) ? params.toString() : "[]";

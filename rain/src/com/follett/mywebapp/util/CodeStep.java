@@ -33,11 +33,10 @@ public class CodeStep {
 	}
 
 	public boolean validation() {
-		String comparable;
+		String comparable = "~";
 		if(this.tagID != null) {
 			comparable = this.tagID.substring(0, 1);
 		} else {
-			//this could have an empty multiTag variable... but not likely
 			comparable = this.multiTag.get(0).getTag().substring(0, 1);
 		}
 		return (comparable.compareTo("a") <= 0) && (comparable.compareTo("Z") >= 0);
@@ -46,32 +45,30 @@ public class CodeStep {
 	@Override
 	public String toString() {
 		String returnable = "";
-		if(this.tagID == null) {
+		if(this.tagID == null && this.multiTag.size() > 1) {
 			returnable = "[";
 			boolean firstTag = true;
 			for (SingleTag tag : this.multiTag) {
 				if(firstTag) {
-					returnable += tag.getTag() + " [";
+					returnable += tag.getTag();
 					firstTag = false;
 				} else {
-					returnable += ", " + tag.getTag() + " [";
+					returnable += ", " + tag.getTag();
 				}
-				boolean firstParam = true;
 				if(tag.getParams() != null) {
-					for (String param : tag.getParams()) {
-						if(firstParam) {
-							returnable += param;
-							firstTag = false;
-						} else {
-							returnable += ", " + param;
-						}
-					}
+					returnable += tag.getParams().toString();
+				}else {
+					returnable += "[]";
 				}
-				returnable += "]";
 			}
 			returnable += "]";
+		} else if(this.tagID == null && this.multiTag.size() == 1) {
+			ArrayList<String> params = this.multiTag.get(0).getParams();
+			returnable = this.multiTag.get(0).getTag() + " ";
+			returnable += (params != null) ? params.toString() : "[]";
 		} else {
-			returnable = this.tagID + " " + this.variables.toString();
+			returnable = this.tagID + " ";
+			returnable += (this.variables != null) ? this.variables.toString() : "[]";
 		}
 		return returnable;
 	}

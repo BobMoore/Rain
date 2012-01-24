@@ -49,9 +49,12 @@ import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
 
+import org.stringtemplate.v4.*;
+
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
+@SuppressWarnings("unused")
 public class mywebapp implements EntryPoint {
   /**
    * The message displayed to the user when the server cannot be reached or
@@ -136,19 +139,6 @@ public class mywebapp implements EntryPoint {
 			}
 	    }
 
-    class GenerateCodeHandler implements ClickHandler {
-
-		@Override
-		public void onClick(ClickEvent event) {
-			//step one get a list of tags and variables to be sent
-			CodeContainer testCode = extractCode();
-			System.out.print("\n" + testCode.toString() + "\n");
-
-			//step two send them to the service to gather the code snipets
-			//step three gather the code that was written from the service and do something with it
-		}
-    }
-
     class ValidationDialog implements ClickHandler {
 
     	DialogBox dialog;
@@ -168,6 +158,18 @@ public class mywebapp implements EntryPoint {
     	@Override
     	public void onClick(ClickEvent event) {
     		this.dialog = createSetupDialogBox();
+    		this.dialog.show();
+    		this.dialog.center();
+    	}
+    }
+
+    class CodeDialog implements ClickHandler {
+
+    	DialogBox dialog;
+
+    	@Override
+    	public void onClick(ClickEvent event) {
+    		this.dialog = createCodeDialogBox();
     		this.dialog.show();
     		this.dialog.center();
     	}
@@ -216,7 +218,7 @@ public class mywebapp implements EntryPoint {
     // Add a handler to send the name to the server
     TreeHandler tHandler = new TreeHandler();
     this.t.addSelectionHandler(tHandler);
-    GenerateCodeHandler cHandler = new GenerateCodeHandler();
+    CodeDialog cHandler = new CodeDialog();
     generateCode.addClickHandler(cHandler);
     SaveHandler saveHandler = new SaveHandler();
     saveButton.addClickHandler(saveHandler);
@@ -228,7 +230,38 @@ public class mywebapp implements EntryPoint {
     loadTest.addClickHandler(loadTestHandler);
   }
 
-  public DialogBox createLoadDialog() {
+public DialogBox createCodeDialogBox() {
+
+    final DialogBox dialogBox = new DialogBox(false);
+
+    Button closeButton = new Button(
+            "Close", new ClickHandler() {
+              public void onClick(ClickEvent event) {
+                dialogBox.hide();
+              }
+            });
+
+    //evaluate the size of their window and make this the bulk of it.
+    dialogBox.setWidget(buildCodeDialog(closeButton));
+    dialogBox.setGlassEnabled(true);
+
+    return dialogBox;
+}
+
+//TODO placeholder
+private LayoutPanel buildCodeDialog(Button closeButton) {
+	LayoutPanel panel = new LayoutPanel();
+	CodeContainer testCode = extractCode();
+	panel.setSize("500px", "250px");
+	Label label = new Label();
+	label.setText(testCode.toString());
+	panel.add(label);
+	panel.add(closeButton);
+	panel.setWidgetBottomHeight(closeButton, 1, Unit.PX, 30, Unit.PX);
+	return panel;
+}
+
+public DialogBox createLoadDialog() {
 	    // Create a dialog box and set the caption text
 	    final DialogBox dialogBox = new DialogBox(false);
 
@@ -297,7 +330,6 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 				public void onFailure(Throwable caught) {
 				}
 
-				//TODO placeholder
 				@Override
 				public void onSuccess(String result) {
 					buildStepTable();
@@ -1464,7 +1496,7 @@ private void resetSetupTree(final LayoutPanel panel, final Tree setupTree,
 		setupTree.getSelectedItem().setState(selected.getState());
 	}
 }
-//TODO placeholder
+
 private CodeContainer extractCode() {
 	CodeContainer testCode = new CodeContainer();
 	String id = "";

@@ -142,7 +142,7 @@ public class mywebapp implements EntryPoint {
 		public void onClick(ClickEvent event) {
 			//step one get a list of tags and variables to be sent
 			CodeContainer testCode = extractCode();
-			System.out.print(testCode.toString() + "\n");
+			System.out.print("\n" + testCode.toString() + "\n");
 
 			//step two send them to the service to gather the code snipets
 			//step three gather the code that was written from the service and do something with it
@@ -371,12 +371,13 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 					boolean vFirst = true;
 					TestLoader.this.currentTag = new ArrayList<SingleTag>();
 					for (CodeStep step : steps) {
-						char firstChar = step.getFirstChar();
+						boolean validation = step.validation();
 						TestLoader.this.columnIndex = 0;
 						final ArrayList<SingleTag> multipleTags = step.getMultiTag();
-						if(firstChar >= 'a' && firstChar <= 'Z') {
+						if(validation) {
 							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables()));
 							if(first) {
+								tags += "New Step, ";
 								if(vFirst) {
 									tags += "Validation, ";
 									vFirst = false;
@@ -384,11 +385,12 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 								tags += step.getTagID();
 								first = false;
 							} else {
+								tags += ", New Step, ";
 								if(vFirst) {
 									tags += "Validation, ";
 									vFirst = false;
 								}
-								tags += ", " + step.getTagID();
+								tags += step.getTagID();
 							}
 						} else if (multipleTags == null) {
 							if(!first) {

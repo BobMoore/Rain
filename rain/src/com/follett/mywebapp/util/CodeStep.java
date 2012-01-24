@@ -32,15 +32,15 @@ public class CodeStep {
 		this.multiTag.add(new SingleTag(tag, params));
 	}
 
-	public char getFirstChar() {
-		char returnable = '~';
+	public boolean validation() {
+		String comparable;
 		if(this.tagID != null) {
-			returnable = this.tagID.charAt(0);
+			comparable = this.tagID.substring(0, 1);
 		} else {
 			//this could have an empty multiTag variable... but not likely
-			returnable = this.multiTag.get(0).getTag().charAt(0);
+			comparable = this.multiTag.get(0).getTag().substring(0, 1);
 		}
-		return returnable;
+		return (comparable.compareTo("a") <= 0) && (comparable.compareTo("Z") >= 0);
 	}
 
 	@Override

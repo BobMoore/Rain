@@ -12,8 +12,7 @@ public class StepHolder extends Button {
 	public StepHolder(String text, String tagID) {
 		super(text);
 		this.tagID = tagID;
-		this.multiTags = new ArrayList<String>();
-		this.multiTags.add(tagID);
+		this.multiTags = null;
 	}
 
 	public StepHolder(String text) {

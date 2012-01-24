@@ -41,7 +41,7 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 			  tagID = rs.getString("tagID");
 			  parentTagID = rs.getString("parentTagID");
 			  description = rs.getString("label");
-			  fields = Integer.valueOf(rs.getInt("fields"));
+			  fields = Integer.valueOf(rs.getInt("textfields"));
 			  fieldDescriptions = rs.getString("fieldDescriptions");
 			  ValidationTreeDataItem item = new ValidationTreeDataItem(tagID, parentTagID, description, fields);
 			  item.addDescriptions(fieldDescriptions);

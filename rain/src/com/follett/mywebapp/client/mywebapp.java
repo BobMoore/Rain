@@ -306,6 +306,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 					AsyncCallback<ArrayList<StepTableData>> callbackStep = new AsyncCallback<ArrayList<StepTableData>>() {
 
 						boolean firstStep = true;
+						boolean lastStepSetup = true;
 
 						@Override
 						public void onFailure(Throwable caught) {
@@ -313,13 +314,12 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 
 						@Override
 						public void onSuccess(ArrayList<StepTableData> dataResult) {
-							int paramIndex = 0;
 							int currentRow = 0;
 							StepHolder removeStepButton = null;
 							for (StepTableData data : dataResult) {
 								if(!this.firstStep && data.isNewStep()) {
 									getStepFlexTable().setWidget(currentRow, TestLoader.this.columnIndex, removeStepButton);
-									if(data.isSetup()) {
+									if(this.lastStepSetup) {
 										bumpSetupRow();
 									} else {
 										bumpValidationRow();
@@ -333,8 +333,8 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 									removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + "", 0));
 									getStepFlexTable().insertRow(currentRow);
 									TestLoader.this.columnIndex = 0;
-									paramIndex = 0;
 									this.firstStep = false;
+									this.lastStepSetup = data.isSetup();
 								}
 								String stepLabel = data.getLabel();
 								getStepFlexTable().setText(currentRow, TestLoader.this.columnIndex, stepLabel);
@@ -342,8 +342,9 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 								if(data.getTextfields() != null) {
 									ArrayList<String> descriptions = data.getDescriptions();
 									ArrayList<String> params = new ArrayList<String>();
-									if(TestLoader.this.currentTag.size() < paramIndex) {
-										 params = TestLoader.this.currentTag.get(paramIndex).getParams();
+									if(TestLoader.this.currentTag.size() > 0 && data.getTagID().equals(TestLoader.this.currentTag.get(0).getTag())) {
+										 params = TestLoader.this.currentTag.get(0).getParams();
+										 TestLoader.this.currentTag.remove(0);
 									}
 									for(int a = 0; a < data.getTextfields().intValue(); a++) {
 										TextboxIDHolder box = new TextboxIDHolder(data.getTagID());
@@ -358,10 +359,14 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 									}
 								}
 								removeStepButton.addTagID(data.getTagID());
-								paramIndex++;
 							}
 							if(removeStepButton != null) {
 								getStepFlexTable().setWidget(currentRow, TestLoader.this.columnIndex, removeStepButton);
+								if(this.lastStepSetup) {
+									bumpSetupRow();
+								} else {
+									bumpValidationRow();
+								}
 							}
 						}
 					};
@@ -371,10 +376,9 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 					boolean vFirst = true;
 					TestLoader.this.currentTag = new ArrayList<SingleTag>();
 					for (CodeStep step : steps) {
-						boolean validation = step.validation();
 						TestLoader.this.columnIndex = 0;
 						final ArrayList<SingleTag> multipleTags = step.getMultiTag();
-						if(validation) {
+						if(step.validation()) {
 							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables()));
 							if(first) {
 								tags += "New Step, ";
@@ -393,6 +397,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 								tags += step.getTagID();
 							}
 						} else if (multipleTags == null) {
+							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables()));
 							if(!first) {
 								tags += ", ";
 							} else {
@@ -1290,6 +1295,7 @@ private void buildMainPanel(final LayoutPanel mainPanel, final LayoutPanel local
 }
 
 private void buildStepTable() {
+	this.validationSteps = new ArrayList<String>();
 	int rowCount = getStepFlexTable().getRowCount();
 	for(int a = 0; a < rowCount; a++) {
 		getStepFlexTable().removeRow(0);
@@ -1303,7 +1309,6 @@ private void buildStepTable() {
 	this.identifierKey.add("Validation Steps");
 	this.setupRow = 1;
 	this.validationRow = 1;
-	this.validationSteps = new ArrayList<String>();
 }
 
 class RemoveStepHandler implements ClickHandler {
@@ -1486,17 +1491,28 @@ private CodeContainer extractCode() {
 				testCode.addStep(tagName.getTagID(), variables);
 			}
 			if (tagName.getMultiTags() != null) {
-				if(step.getMultiTag() != null) {
-					for (SingleTag singleTags : step.getMultiTag()) {
-						if(tagName.getMultiTags().contains(singleTags.getTag())) {
-							tagName.getMultiTags().remove(singleTags.getTag());
+				CodeStep newStep = new CodeStep();
+				SingleTag single;
+				if(step.getMultiTag() != null && step.getMultiTag().size() > 0) {
+					single = step.getMultiTag().get(0);
+					step.getMultiTag().remove(0);
+				} else {
+					single = new SingleTag(null, null);
+				}
+				for (String tag : tagName.getMultiTags()) {
+					if(tag.equals(single.getTag())) {
+						newStep.addTag(single.getTag(), single.getParams());
+						if(step.getMultiTag().size() > 0) {
+							single = step.getMultiTag().get(0);
+							step.getMultiTag().remove(0);
+						} else {
+							single = new SingleTag(null, null);
 						}
+					} else {
+						newStep.addTag(tag, null);
 					}
 				}
-				for (String remainingTag : tagName.getMultiTags()) {
-					step.addTag(remainingTag, null);
-				}
-				testCode.addStep(step);
+				testCode.addStep(newStep);
 			}
 		}
 	}

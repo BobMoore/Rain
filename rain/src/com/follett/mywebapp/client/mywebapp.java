@@ -249,6 +249,10 @@ public DialogBox createCodeDialogBox() {
 //TODO placeholder
 private LayoutPanel buildCodeDialog(Button closeButton) {
 	LayoutPanel panel = new LayoutPanel();
+	if (mywebapp.this.codeBuildingService == null) {
+		mywebapp.this.codeBuildingService = GWT.create(SetupBuilderService.class);
+	}
+
 	CodeContainer testCode = extractCode();
 	panel.setSize("500px", "250px");
 	final Label label = new Label();

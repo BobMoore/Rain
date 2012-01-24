@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import com.follett.mywebapp.tmp.*;
+
 import org.stringtemplate.v4.*;
 
 import com.follett.mywebapp.util.StepTableData;
@@ -15,6 +17,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 /**
  * The server side implementation of the RPC service.
  */
+@SuppressWarnings("unused")
 public class CodeBuilderServiceImpl extends RemoteServiceServlet implements CodeBuilderService {
 
   private static final long serialVersionUID = 1L;
@@ -173,7 +176,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 
   @Override
   public String generateTemplatedCode() {
-	  STGroup g = new STGroupDir("/tmp");
+	  STGroup g = new STGroupFile("/com/follett/mywebapp/tmp/test.stg");
 	  String label;
 	  ST attempt = g.getInstanceOf("aaaaaa");
 	  attempt.add("param1", "SiteID");

@@ -15,4 +15,5 @@ public interface CodeBuilderService extends RemoteService {
 	Boolean saveTest(int testNumber, String testSteps);
 	Boolean doesTestExist(int TestNumber);
 	String getTest(int TestNumber);
+	public String generateTemplatedCode();
 }

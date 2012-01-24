@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import org.stringtemplate.v4.*;
+
 import com.follett.mywebapp.util.StepTableData;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -167,5 +169,15 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 	  } catch (SQLException e) {
 	  }
 	  return returnable;
+  }
+
+  @Override
+  public String generateTemplatedCode() {
+	  STGroup g = new STGroupDir("/tmp");
+	  String label;
+	  ST attempt = g.getInstanceOf("aaaaaa");
+	  attempt.add("param1", "SiteID");
+	  label = attempt.render();
+	  return label;
   }
 }

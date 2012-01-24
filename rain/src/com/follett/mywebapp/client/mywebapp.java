@@ -49,12 +49,10 @@ import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
 
-import org.stringtemplate.v4.*;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
-@SuppressWarnings("unused")
 public class mywebapp implements EntryPoint {
   /**
    * The message displayed to the user when the server cannot be reached or
@@ -253,11 +251,25 @@ private LayoutPanel buildCodeDialog(Button closeButton) {
 	LayoutPanel panel = new LayoutPanel();
 	CodeContainer testCode = extractCode();
 	panel.setSize("500px", "250px");
-	Label label = new Label();
-	label.setText(testCode.toString());
+	final Label label = new Label();
 	panel.add(label);
 	panel.add(closeButton);
 	panel.setWidgetBottomHeight(closeButton, 1, Unit.PX, 30, Unit.PX);
+
+	AsyncCallback<String> callback = new AsyncCallback<String>() {
+
+		@Override
+		public void onFailure(Throwable caught) {
+			System.out.print("Failure!");
+		}
+
+		@Override
+		public void onSuccess(String result) {
+			label.setText(result);
+		}
+	};
+	mywebapp.this.codeBuildingService.generateTemplatedCode(callback);
+
 	return panel;
 }
 

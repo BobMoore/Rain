@@ -11,4 +11,5 @@ public interface CodeBuilderServiceAsync {
   void saveTest(int testNumber, String testSteps, AsyncCallback<Boolean> callback);
   void doesTestExist(int TestNumber, AsyncCallback<Boolean> callback);
   void getTest(int TestNumber, AsyncCallback<String> callback);
+  void generateTemplatedCode(AsyncCallback<String> callback);
 }

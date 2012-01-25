@@ -1,5 +1,6 @@
 package com.follett.mywebapp.server;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -11,6 +12,9 @@ import com.follett.mywebapp.tmp.*;
 
 import org.stringtemplate.v4.*;
 
+import com.follett.mywebapp.util.CodeContainer;
+import com.follett.mywebapp.util.CodeStep;
+import com.follett.mywebapp.util.SingleTag;
 import com.follett.mywebapp.util.StepTableData;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -175,12 +179,26 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
   }
 
   @Override
-  public String generateTemplatedCode() {
+  public String generateTemplatedCode(CodeContainer testCode) {
 	  STGroup g = new STGroupFile("/com/follett/mywebapp/tmp/test.stg");
-	  String label;
-	  ST attempt = g.getInstanceOf("aaaaaa");
-	  attempt.add("param1", "SiteID");
-	  label = attempt.render();
+	  String label = "";
+	  ArrayList<SingleTag> tags;
+	  for (CodeStep step : testCode.getStepList()) {
+		  tags = new ArrayList<SingleTag>();
+		  if(step.getMultiTag() != null) {
+			  tags = step.getMultiTag();
+		  } else {
+			  tags.add(new SingleTag(step.getTagID(), step.getVariables()));
+		  }
+		  for (SingleTag tag : tags) {
+			  ST attempt = g.getInstanceOf(tag.getTag());
+			  if(attempt == null) {
+				  label += "fail(\"Step " + tag.getTag() +" not implemented\");\r\n";
+			  }else {
+				  label += attempt.render() + "\r\n";
+			  }
+		  }
+	  }
 	  return label;
   }
 }

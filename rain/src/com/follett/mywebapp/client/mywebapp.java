@@ -264,7 +264,7 @@ private LayoutPanel buildCodeDialog(Button closeButton) {
 
 		@Override
 		public void onFailure(Throwable caught) {
-			System.out.print("Failure!");
+			System.out.print("Failure! " + caught.toString());
 		}
 
 		@Override
@@ -272,7 +272,7 @@ private LayoutPanel buildCodeDialog(Button closeButton) {
 			label.setText(result);
 		}
 	};
-	mywebapp.this.codeBuildingService.generateTemplatedCode(callback);
+	mywebapp.this.codeBuildingService.generateTemplatedCode(testCode, callback);
 
 	return panel;
 }
@@ -430,7 +430,6 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 						final ArrayList<SingleTag> multipleTags = step.getMultiTag();
 						if(step.validation()) {
 							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables()));
-							System.out.print("\n(validation)TagID:" + step.getTagID() + " Params" + step.getVariables());
 							if(first) {
 								tags += "New Step, ";
 								if(vFirst) {
@@ -449,7 +448,6 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 							}
 						} else if (multipleTags == null) {
 							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables()));
-							System.out.print("\n(multiple tags = null)TagID:" + step.getTagID() + " Params" + step.getVariables());
 							if(!first) {
 								tags += ", ";
 							} else {
@@ -466,7 +464,6 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 
 							for (SingleTag tag : multipleTags) {
 								TestLoader.this.currentTag.add(tag);
-								System.out.print("\n(tag)TagID:" + tag.getTag() + " Params" + tag.getParams());
 								if(first) {
 									tags += tag.getTag();
 									first = false;
@@ -476,8 +473,6 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 							}
 						}
 					}
-					System.out.print("\n\nSending... " + tags);
-					System.out.print("\nParams..." + TestLoader.this.currentTag.toString());
 					mywebapp.this.codeBuildingService.getSetupPiece(tags, callbackStep);
 				}
 

@@ -1,8 +1,11 @@
 package com.follett.mywebapp.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class CodeContainer {
+public class CodeContainer implements Serializable{
+
+	private static final long serialVersionUID = 1L;
 
 	private ArrayList<CodeStep> steps;
 

@@ -188,7 +188,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 		  if(step.getMultiTag() != null) {
 			  tags = step.getMultiTag();
 		  } else {
-			  tags.add(new SingleTag(step.getTagID(), step.getVariables()));
+			  tags.add(new SingleTag(step.getTagID(), step.getVariables(), step.getTitles()));
 		  }
 		  for (SingleTag tag : tags) {
 			  ST attempt = g.getInstanceOf(tag.getTag());
@@ -197,7 +197,6 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 			  }else {
 				  label += attempt.render() + "\r\n";
 			  }
-//			  attempt.inspect();
 		  }
 	  }
 	  return label;

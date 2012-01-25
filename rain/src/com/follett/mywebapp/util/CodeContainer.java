@@ -13,8 +13,8 @@ public class CodeContainer implements Serializable{
 		this.steps = new ArrayList<CodeStep>();
 	}
 
-	public void addStep(String tagID, ArrayList<String> variables) {
-		this.steps.add(new CodeStep(tagID, variables));
+	public void addStep(String tagID, ArrayList<String> variables, ArrayList<String> titles) {
+		this.steps.add(new CodeStep(tagID, variables, titles));
 	}
 
 	public void addStep(CodeStep step) {

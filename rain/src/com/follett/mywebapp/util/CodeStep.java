@@ -7,38 +7,34 @@ public class CodeStep implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 
-	private String tagID;
-	private ArrayList<String> variables;
+	private SingleTag singleTag;
 	private ArrayList<SingleTag> multiTag;
 
 	public CodeStep() {
-		this.tagID = null;
-		this.variables = null;
+		this.singleTag = null;
 		this.multiTag = new ArrayList<SingleTag>();
 	}
 
-	public CodeStep (String tagID, ArrayList<String> variables) {
-		this.tagID = tagID;
-		this.variables = variables;
+	public CodeStep (String tagID, ArrayList<String> variables, ArrayList<String> titles) {
+		this.singleTag = new SingleTag(tagID, variables, titles);
 		this.multiTag = null;
 	}
 
-	public void addTag(String tag, ArrayList<String> params) {
+	public void addTag(String tag, ArrayList<String> params, ArrayList<String> titles) {
 		if(this.multiTag == null) {
 			this.multiTag = new ArrayList<SingleTag>();
 		}
-		if(this.tagID != null) {
-			this.multiTag.add(new SingleTag(this.tagID, this.variables));
-			this.tagID = null;
-			this.variables = null;
+		if(this.singleTag.getTag() != null) {
+			this.multiTag.add(new SingleTag(this.singleTag.getTag(), this.singleTag.getParams(), this.singleTag.getTitles()));
+			this.singleTag = null;
 		}
-		this.multiTag.add(new SingleTag(tag, params));
+		this.multiTag.add(new SingleTag(tag, params, titles));
 	}
 
 	public boolean validation() {
 		String comparable = "~";
-		if(this.tagID != null) {
-			comparable = this.tagID.substring(0, 1);
+		if(this.singleTag != null) {
+			comparable = this.singleTag.getTag().substring(0, 1);
 		} else {
 			comparable = this.multiTag.get(0).getTag().substring(0, 1);
 		}
@@ -48,7 +44,7 @@ public class CodeStep implements Serializable{
 	@Override
 	public String toString() {
 		String returnable = "";
-		if(this.tagID == null && (this.multiTag != null && this.multiTag.size() > 1)) {
+		if(this.singleTag == null && (this.multiTag != null && this.multiTag.size() > 1)) {
 			returnable = "[";
 			boolean firstTag = true;
 			for (SingleTag tag : this.multiTag) {
@@ -65,23 +61,27 @@ public class CodeStep implements Serializable{
 				}
 			}
 			returnable += "]";
-		} else if(this.tagID == null && (this.multiTag != null && this.multiTag.size() == 1)) {
+		} else if(this.singleTag == null && (this.multiTag != null && this.multiTag.size() == 1)) {
 			ArrayList<String> params = this.multiTag.get(0).getParams();
 			returnable = this.multiTag.get(0).getTag() + " ";
 			returnable += (params != null) ? params.toString() : "[]";
 		} else {
-			returnable = this.tagID + " ";
-			returnable += (this.variables != null) ? this.variables.toString() : "[]";
+			returnable = this.singleTag.getTag() + " ";
+			returnable += (this.singleTag.getParams() != null) ? this.singleTag.getParams().toString() : "[]";
 		}
 		return returnable;
 	}
 
 	public String getTagID() {
-		return this.tagID;
+		return this.singleTag.getTag();
 	}
 
 	public ArrayList<String> getVariables() {
-		return this.variables;
+		return this.singleTag.getParams();
+	}
+
+	public ArrayList<String> getTitles() {
+		return this.singleTag.getTitles();
 	}
 
 	public ArrayList<SingleTag> getMultiTag() {

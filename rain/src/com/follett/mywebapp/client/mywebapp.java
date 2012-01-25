@@ -429,7 +429,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 						TestLoader.this.columnIndex = 0;
 						final ArrayList<SingleTag> multipleTags = step.getMultiTag();
 						if(step.validation()) {
-							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables()));
+							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables(), step.getTitles()));
 							if(first) {
 								tags += "New Step, ";
 								if(vFirst) {
@@ -447,7 +447,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 								tags += step.getTagID();
 							}
 						} else if (multipleTags == null) {
-							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables()));
+							TestLoader.this.currentTag.add(new SingleTag(step.getTagID(), step.getVariables(), step.getTitles()));
 							if(!first) {
 								tags += ", ";
 							} else {
@@ -496,7 +496,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 									result = result.substring(result.indexOf(']') + 1);
 									currentList = parseParams(params);
 								}
-								multiStep.addTag(tagID, currentList);
+								multiStep.addTag(tagID, currentList, null);
 							}
 							returnList.add(multiStep);
 						} else {
@@ -508,7 +508,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 								result = result.substring(result.indexOf(']') + 1);
 								currentList = parseParams(params);
 							}
-							returnList.add(new CodeStep(tagID, currentList));
+							returnList.add(new CodeStep(tagID, currentList, null));
 						}
 						if(result.contains(",")) {
 							result = result.substring(result.indexOf(',') + 1).trim();
@@ -1512,6 +1512,7 @@ private CodeContainer extractCode() {
 	CodeContainer testCode = new CodeContainer();
 	String id = "";
 	ArrayList<String> variables = new ArrayList<String>();
+	ArrayList<String> titles = new ArrayList<String>();
 	FlexTable instructionTable = getStepFlexTable();
 	for(int a = 1; a < instructionTable.getRowCount(); a++) {
 		if(a != getSetupRow()) {
@@ -1520,6 +1521,7 @@ private CodeContainer extractCode() {
 			Widget w = instructionTable.getWidget(a, b);
 			while(!(w instanceof StepHolder)) {
 				variables = new ArrayList<String>();
+				titles = new ArrayList<String>();
 				if(instructionTable.getWidget(a, b) == null) {
 					b++;
 					w = instructionTable.getWidget(a, b);
@@ -1527,22 +1529,25 @@ private CodeContainer extractCode() {
 					while(w instanceof TextboxIDHolder) {
 						TextboxIDHolder box = (TextboxIDHolder)w;
 						variables.add(box.getText());
+						variables.add(box.getTitle());
 						id = box.getTagID();
 						b++;
 						w = instructionTable.getWidget(a, b);
 					}
 					if(!(w instanceof StepHolder)) {
-						step.addTag(id, variables);
+						step.addTag(id, variables, titles);
 					}
 				}
 			}
 			StepHolder tagName = (StepHolder)w;
 			if(tagName.getTagID() != null) {
-				testCode.addStep(tagName.getTagID(), variables);
+				testCode.addStep(tagName.getTagID(), variables, titles);
 				variables = new ArrayList<String>();
+				titles = new ArrayList<String>();
 			}else if (tagName.getMultiTags() != null && tagName.getMultiTags().size() == 1) {
-				testCode.addStep(id, variables);
+				testCode.addStep(id, variables, titles);
 				variables = new ArrayList<String>();
+				titles = new ArrayList<String>();
 			}
 			if (tagName.getMultiTags() != null && tagName.getMultiTags().size() != 1) {
 				CodeStep newStep = new CodeStep();
@@ -1551,19 +1556,19 @@ private CodeContainer extractCode() {
 					single = step.getMultiTag().get(0);
 					step.getMultiTag().remove(0);
 				} else {
-					single = new SingleTag(null, null);
+					single = new SingleTag(null, null, null);
 				}
 				for (String tag : tagName.getMultiTags()) {
 					if(tag.equals(single.getTag())) {
-						newStep.addTag(single.getTag(), single.getParams());
+						newStep.addTag(single.getTag(), single.getParams(), single.getTitles());
 						if(step.getMultiTag().size() > 0) {
 							single = step.getMultiTag().get(0);
 							step.getMultiTag().remove(0);
 						} else {
-							single = new SingleTag(null, null);
+							single = new SingleTag(null, null, null);
 						}
 					} else {
-						newStep.addTag(tag, null);
+						newStep.addTag(tag, null, null);
 					}
 				}
 				testCode.addStep(newStep);

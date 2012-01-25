@@ -180,7 +180,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 
   @Override
   public String generateTemplatedCode(CodeContainer testCode) {
-	  STGroup g = new STGroupFile("/com/follett/mywebapp/tmp/test.stg");
+	  STGroup g = new STGroupFile("/com/follett/mywebapp/tmp/AllFile.stg");
 	  String label = "";
 	  ArrayList<SingleTag> tags;
 	  for (CodeStep step : testCode.getStepList()) {
@@ -197,6 +197,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 			  }else {
 				  label += attempt.render() + "\r\n";
 			  }
+//			  attempt.inspect();
 		  }
 	  }
 	  return label;

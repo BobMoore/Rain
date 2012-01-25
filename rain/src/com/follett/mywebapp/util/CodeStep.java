@@ -24,7 +24,7 @@ public class CodeStep implements Serializable{
 		if(this.multiTag == null) {
 			this.multiTag = new ArrayList<SingleTag>();
 		}
-		if(this.singleTag.getTag() != null) {
+		if(this.singleTag != null) {
 			this.multiTag.add(new SingleTag(this.singleTag.getTag(), this.singleTag.getParams(), this.singleTag.getTitles()));
 			this.singleTag = null;
 		}

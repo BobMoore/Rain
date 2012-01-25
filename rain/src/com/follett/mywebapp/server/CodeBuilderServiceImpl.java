@@ -195,6 +195,14 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 			  if(attempt == null) {
 				  label += "fail(\"Step " + tag.getTag() +" not implemented\");\r\n";
 			  }else {
+				  if(tag.getTitles() != null && tag.getParams() != null) {
+					  int size = (tag.getTitles().size() < tag.getParams().size())? tag.getTitles().size(): tag.getParams().size();
+					  for(int a = 0; a < size; a++) {
+						  if(!(tag.getTitles().get(a).isEmpty() || tag.getParams().get(a).isEmpty())) {
+							  attempt.add(tag.getTitles().get(a), tag.getParams().get(a));
+						  }
+					  }
+				  }
 				  label += attempt.render() + "\r\n";
 			  }
 		  }

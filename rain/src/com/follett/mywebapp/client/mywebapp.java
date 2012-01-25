@@ -21,6 +21,8 @@ import com.follett.mywebapp.util.ValidationTreeDataItem;
 import com.follett.mywebapp.util.ValidationTreeNode;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
@@ -68,7 +70,7 @@ public class mywebapp implements EntryPoint {
 	private Tree t;
 	private LayoutPanel treePanel;
 	private LayoutPanel setupPanel;
-	private int loadStatus = 0;
+	TextBox testNumber;
 
 	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
 	private SetupBuilderServiceAsync setupBuildingService = GWT.create(SetupBuilderService.class);
@@ -80,10 +82,11 @@ public class mywebapp implements EntryPoint {
   public void onModuleLoad() {
 
 	    final Button saveButton = new Button("Save Test");
-	    final TextBox testNumber = new TextBox();
+	    this.testNumber = new TextBox();
 	    final Button loadTest = new Button("Load Test");
 	    final Button generateCode = new Button("Generate Code");
 	    final Button editSetup = new Button("Edit Setup");
+	    final Button clearTable = new Button("Clear Test");
 	    final LayoutPanel mainPanel = new LayoutPanel();
 	    this.treePanel = new LayoutPanel();
 	    final ScrollPanel flexPanel = new ScrollPanel();
@@ -103,7 +106,7 @@ public class mywebapp implements EntryPoint {
 		this.treePanel.setWidgetLeftWidth(openValidationDialog, 1, Unit.EM, 15, Unit.EM);
 		this.treePanel.setWidgetBottomHeight(openValidationDialog, 1, Unit.EM, 3, Unit.EM);
 
-		builtStepPanel(saveButton, testNumber, generateCode, editSetup, mainPanel, flexPanel, loadTest);
+		builtStepPanel(saveButton, this.testNumber, generateCode, editSetup, mainPanel, flexPanel, loadTest, clearTable);
 
 	    buildMainPanel(mainPanel, this.setupPanel, testDevelopementPanel, this.treePanel);
 
@@ -182,6 +185,32 @@ public class mywebapp implements EntryPoint {
     		this.dialog = createLoadDialog();
     		this.dialog.show();
     		this.dialog.center();
+    		LayoutPanel panel = (LayoutPanel) this.dialog.getWidget();
+    		int index = -1;
+    		for(int a = 0; a < panel.getWidgetCount(); a++) {
+    			if(panel.getWidget(a) instanceof TextBox) {
+    				index = a;
+    			}
+    		}
+    		if(index > 0) {
+    			final TextBox myBox = (TextBox)panel.getWidget(index);
+    			if(myBox != null) {
+    				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+    					@Override
+    					public void execute () {
+    						myBox.setFocus(true);
+    					}
+    				});
+    			}
+    		}
+    	}
+    }
+
+    class TestClear implements ClickHandler {
+
+    	@Override
+    	public void onClick(ClickEvent event) {
+    		mywebapp.this.buildStepTable();
     	}
     }
 
@@ -209,7 +238,7 @@ public class mywebapp implements EntryPoint {
 					}
 				}
 			};
-			mywebapp.this.codeBuildingService.saveTest(Integer.valueOf(testNumber.getText()).intValue(), testCode.toString(), callback);
+			mywebapp.this.codeBuildingService.saveTest(Integer.valueOf(mywebapp.this.testNumber.getText()).intValue(), testCode.toString(), callback);
 		}
 	}
 
@@ -226,6 +255,8 @@ public class mywebapp implements EntryPoint {
     editSetup.addClickHandler(setupHandler);
     LoadDialog loadTestHandler = new LoadDialog();
     loadTest.addClickHandler(loadTestHandler);
+    TestClear clear = new TestClear();
+    clearTable.addClickHandler(clear);
   }
 
 public DialogBox createCodeDialogBox() {
@@ -246,7 +277,6 @@ public DialogBox createCodeDialogBox() {
     return dialogBox;
 }
 
-//TODO placeholder
 private LayoutPanel buildCodeDialog(Button closeButton) {
 	LayoutPanel panel = new LayoutPanel();
 	if (mywebapp.this.codeBuildingService == null) {
@@ -302,9 +332,13 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 	label.setText("Test Number:");
 	panel.add(label);
 	panel.setWidgetTopHeight(label, 1, Unit.PX, 20, Unit.PX);
-	final TextBox testNumber = new TextBox();
-	panel.add(testNumber);
-	panel.setWidgetTopHeight(testNumber, 21, Unit.PX, 30, Unit.PX);
+	final TextBox testNumberLocal = new TextBox();
+	panel.add(testNumberLocal);
+	if(!mywebapp.this.testNumber.getText().isEmpty()) {
+		testNumberLocal.setText(mywebapp.this.testNumber.getText());
+	}
+	testNumberLocal.setFocus(true);
+	panel.setWidgetTopHeight(testNumberLocal, 21, Unit.PX, 30, Unit.PX);
 	final Label errorLabel = new Label();
 	panel.add(errorLabel);
 	panel.setWidgetTopHeight(errorLabel, 51, Unit.PX, 47, Unit.PX);
@@ -336,7 +370,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 		    	}
 		    };
 		    try {
-		    	mywebapp.this.codeBuildingService.doesTestExist(Integer.valueOf(testNumber.getText()).intValue(), callbackCheck);
+		    	mywebapp.this.codeBuildingService.doesTestExist(Integer.valueOf(testNumberLocal.getText()).intValue(), callbackCheck);
 		    } catch (NumberFormatException e) {
 		    	errorLabel.setText("Bad test number");
 		    }
@@ -529,7 +563,11 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 					return currentList;
 				}
 		    };
-		    mywebapp.this.codeBuildingService.getTest(Integer.valueOf(testNumber.getText()).intValue(), callbackTest);
+		    try {
+		    	mywebapp.this.codeBuildingService.getTest(Integer.valueOf(testNumberLocal.getText()).intValue(), callbackTest);
+		    }catch(NumberFormatException e) {
+		    	errorLabel.setText("Bad test number");
+		    }
 		}
 	}
 	final Button loadTest = new Button("Load");
@@ -548,7 +586,7 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 		}
 	}
 	ButtonClicker testNumberEnter = new ButtonClicker();
-	testNumber.addKeyPressHandler(testNumberEnter);
+	testNumberLocal.addKeyPressHandler(testNumberEnter);
 	panel.add(closeButton);
 	panel.setWidgetBottomHeight(closeButton, 1, Unit.PX, 30, Unit.PX);
 	return panel;
@@ -1153,7 +1191,7 @@ private String compareChildren(ValidationTreeNode item) {
 }
 
 private void builtStepPanel(final Button saveButton, TextBox testNumber, final Button generateCode,
-		final Button editSetup, final LayoutPanel mainPanel, ScrollPanel flexPanel, Button loadTest) {
+		final Button editSetup, final LayoutPanel mainPanel, ScrollPanel flexPanel, Button loadTest, Button clearTable) {
 	mainPanel.add(saveButton);
 	mainPanel.setWidgetLeftWidth(saveButton, 1, Unit.EM, 10, Unit.EM);
 	mainPanel.setWidgetTopHeight(saveButton, 1, Unit.EM, 3, Unit.EM);
@@ -1169,6 +1207,9 @@ private void builtStepPanel(final Button saveButton, TextBox testNumber, final B
 	mainPanel.add(editSetup);
 	mainPanel.setWidgetLeftWidth(editSetup, 45, Unit.EM, 10, Unit.EM);
 	mainPanel.setWidgetTopHeight(editSetup, 1, Unit.EM, 3, Unit.EM);
+	mainPanel.add(clearTable);
+	mainPanel.setWidgetLeftWidth(clearTable, 56, Unit.EM, 10, Unit.EM);
+	mainPanel.setWidgetTopHeight(clearTable, 1, Unit.EM, 3, Unit.EM);
 	flexPanel.add(this.stepFlexTable);
 	flexPanel.ensureVisible(this.stepFlexTable);
 	mainPanel.add(flexPanel);
@@ -1529,7 +1570,7 @@ private CodeContainer extractCode() {
 					while(w instanceof TextboxIDHolder) {
 						TextboxIDHolder box = (TextboxIDHolder)w;
 						variables.add(box.getText());
-						variables.add(box.getTitle());
+						titles.add(box.getTitle());
 						id = box.getTagID();
 						b++;
 						w = instructionTable.getWidget(a, b);
@@ -1576,14 +1617,6 @@ private CodeContainer extractCode() {
 		}
 	}
 	return testCode;
-}
-
-public void alterLoadStatus(int plusOneOrNegitiveOne) {
-	this.loadStatus += plusOneOrNegitiveOne;
-}
-
-public int getLoadStatus() {
-	return this.loadStatus;
 }
 }
 

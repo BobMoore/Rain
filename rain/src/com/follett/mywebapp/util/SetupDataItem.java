@@ -140,4 +140,18 @@ public class SetupDataItem implements Serializable{
 	public boolean doesTabExist(String tab) {
 		return this.tabs.contains(tab);
 	}
+
+	public void removeTag(String tagID) {
+		for (String column : this.dataInColumn.keySet()) {
+			ArrayList<TableData> newList = this.dataInColumn.get(column);
+			TableData remove = null;
+			for (TableData data : newList) {
+				if(data.getTagID().equals(tagID)) {
+					remove = data;
+				}
+			}
+			newList.remove(remove);
+			this.dataInColumn.put(column, newList);
+		}
+	}
 }

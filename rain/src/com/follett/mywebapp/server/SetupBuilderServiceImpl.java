@@ -81,6 +81,7 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 		  Statement stmt = conn.createStatement();
 		  String sql = "";
 		  ArrayList<String> tabs = allData.getTabs();
+		  //THIS DOESN'T REMOVE ANYTHING
 		  for (String tab : tabs) {
 			  ArrayList<String> columns = allData.getColumnsOnTab(tab);
 			  for (String column : columns) {

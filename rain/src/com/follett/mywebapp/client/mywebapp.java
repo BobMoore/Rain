@@ -120,6 +120,7 @@ public class mywebapp implements EntryPoint {
 				ValidationTreeNode selected = (ValidationTreeNode)event.getSelectedItem();
 				getStepFlexTable().setText(getValidationRow(), 0, selected.getText());
 				StepHolder removeStepButton = new StepHolder("x", selected.getTagID());
+				Button moveUp = new Button("Move Up");
 				int buttonOffset = 0;
 				ArrayList<String> descriptions = selected.getDescriptions();
 				if(selected.getFields() != null) {
@@ -133,7 +134,9 @@ public class mywebapp implements EntryPoint {
 					}
 				}
 				removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + ""));
+				moveUp.addClickHandler(new MoveUpStepHandler(getStartKey() + ""));
 				getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, removeStepButton);
+				getStepFlexTable().setWidget(getValidationRow(), 2 + buttonOffset, moveUp);
 				addIdentifierKey(getValidationRow(), getStartKey() + "");
 				bumpValidationRow();
 				bumpStartKey();
@@ -398,21 +401,26 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 						public void onSuccess(ArrayList<StepTableData> dataResult) {
 							int currentRow = 0;
 							StepHolder removeStepButton = null;
+							Button moveUp = null;
 							for (StepTableData data : dataResult) {
 								if(!this.firstStep && data.isNewStep()) {
 									getStepFlexTable().setWidget(currentRow, TestLoader.this.columnIndex, removeStepButton);
+									getStepFlexTable().setWidget(currentRow, TestLoader.this.columnIndex + 1, moveUp);
 									if(this.lastStepSetup) {
 										bumpSetupRow();
 									} else {
 										bumpValidationRow();
 									}
+									bumpStartKey();
 								}
 								currentRow = (data.isSetup()) ? getSetupRow(): getValidationRow();
 								if(data.isNewStep()) {
 									removeStepButton = new StepHolder("x");
+									moveUp = new Button("Move Up");
 									bumpStartKey();
 									addIdentifierKey(currentRow, getStartKey() + "");
-									removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + "", 0));
+									removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + "", (data.isSetup())?0:1));
+									moveUp.addClickHandler(new MoveUpStepHandler(getStartKey() + "", (data.isSetup())?0:1));
 									getStepFlexTable().insertRow(currentRow);
 									TestLoader.this.columnIndex = 0;
 									this.firstStep = false;
@@ -446,11 +454,13 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 							}
 							if(removeStepButton != null) {
 								getStepFlexTable().setWidget(currentRow, TestLoader.this.columnIndex, removeStepButton);
+								getStepFlexTable().setWidget(currentRow, TestLoader.this.columnIndex + 1, moveUp);
 								if(this.lastStepSetup) {
 									bumpSetupRow();
 								} else {
 									bumpValidationRow();
 								}
+								bumpStartKey();
 							}
 						}
 					};
@@ -623,7 +633,7 @@ private DialogBox createSetupDialogBox() {
 			  });
 
 	  //evaluate the size of their window and make this the bulk of it.
-	  dialogBox.setWidget(buildSetupSetup(closeButton));
+	  dialogBox.setWidget(buildSetupDialogPanel(closeButton));
 	  dialogBox.setGlassEnabled(true);
 	  return dialogBox;
   }
@@ -633,7 +643,7 @@ private void resetSetup() {
 	this.setupPanel.add(buildSetupPanel());
 }
 
-private LayoutPanel buildSetupSetup(Button closeButton) {
+private LayoutPanel buildSetupDialogPanel(Button closeButton) {
 	final LayoutPanel panel = new LayoutPanel();
 	panel.setSize("1400px", "700px");
 	final Tree setupTree = new Tree();
@@ -641,6 +651,7 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 	final Button addTab = new Button("Add Tab");
 	final FlexTable mainTable = new FlexTable();
 	final Button saveButton = new Button("Save All");
+	final ArrayList<String> tagIndex = new ArrayList<String>();
 
 	panel.add(setupTree);
 	panel.setWidgetLeftWidth(setupTree, 1, Unit.EM, 20, Unit.EM);
@@ -720,6 +731,7 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 				}
 				int size = columnData.size() + 1;
 				TableData data;
+				Button removeStep;
 				for(a = 0; a < size; a++) {
 					if(a <= columnData.size()) {
 						if (a == columnData.size()) {
@@ -748,8 +760,11 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 							tableBox.setText(textData[b]);
 							tableBox.setTitle(this.title[b]);
 							mainTable.setWidget(a + rowOffset, b, tableBox);
-							//Add a delete element button!
 						}
+						removeStep = new Button("x");
+						removeStep.addClickHandler(new StepRemover(data.getTagID()));
+						mainTable.setWidget(a + rowOffset, 4, removeStep);
+
 					}
 				}
 				this.lastColumn = selected.getText();
@@ -777,6 +792,21 @@ private LayoutPanel buildSetupSetup(Button closeButton) {
 					mainTable.setWidget(a+2, 0, box);
 				}
 				this.lastColumn = null;
+			}
+		}
+
+		class StepRemover implements ClickHandler{
+			private String tagID;
+
+			public StepRemover(String tagID) {
+				this.tagID = tagID;
+			}
+
+			@Override
+			public void onClick(ClickEvent event) {
+				mainTable.removeRow(tagIndex.indexOf(this.tagID)+4);
+				tagIndex.remove(this.tagID);
+				allData.removeTag(this.tagID);
 			}
 		}
 
@@ -1325,6 +1355,7 @@ private TabLayoutPanel buildSetupPanel() {
     			  Boolean checked = Boolean.FALSE;
     			  boolean rowBump = false;
     			  StepHolder removeStepButton = new StepHolder("x");
+    			  Button moveUp = new Button("Move Up");
     			  for (Object obj : this.items) {
     				  if(obj instanceof CheckBox) {
     					  CheckBox box = (CheckBox)obj;
@@ -1362,7 +1393,9 @@ private TabLayoutPanel buildSetupPanel() {
     			  }
     			  if(rowBump) {
     				  removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + "", 0));
+    				  moveUp.addClickHandler(new MoveUpStepHandler(getStartKey() + "", 0));
     				  getStepFlexTable().setWidget(getSetupRow(), column, removeStepButton);
+    				  getStepFlexTable().setWidget(getSetupRow(), column + 1, moveUp);
     				  addIdentifierKey(getSetupRow(), getStartKey() + "");
     				  bumpSetupRow();
     				  bumpStartKey();
@@ -1425,6 +1458,44 @@ class RemoveStepHandler implements ClickHandler {
 			reduceValidationRow();
 		}else{
 			reduceSetupRow();
+		}
+	}
+}
+
+class MoveUpStepHandler implements ClickHandler {
+	String myKey;
+	int setupOrValidation;
+
+	public MoveUpStepHandler(String newKey) {
+		this.myKey = newKey;
+		this.setupOrValidation = 1;
+	}
+
+	public MoveUpStepHandler(String newKey, int zeroForSetup) {
+		this.myKey = newKey;
+		this.setupOrValidation = zeroForSetup;
+	}
+
+	public void onClick(ClickEvent event) {
+		int currentIndex = getIdentifierKey().indexOf(this.myKey);
+		boolean dontSkip = true;
+		if(currentIndex == 1 || currentIndex == getSetupRow() + 1) {
+			dontSkip = false;
+		}
+		if(dontSkip) {
+			String dummy = getIdentifierKey().get(currentIndex-1);
+			getIdentifierKey().set(currentIndex-1, this.myKey);
+			getIdentifierKey().set(currentIndex, dummy);
+			getStepFlexTable().insertRow(currentIndex-1);
+			int count = getStepFlexTable().getCellCount(currentIndex+1);
+			for(int a = 0; a < count; a++) {
+				if(getStepFlexTable().getWidget(currentIndex+1, a) != null) {
+					getStepFlexTable().setWidget(currentIndex - 1, a, getStepFlexTable().getWidget(currentIndex+1, a));
+				} else {
+					getStepFlexTable().setText(currentIndex - 1, a, getStepFlexTable().getText(currentIndex+1, a));
+				}
+			}
+			getStepFlexTable().removeRow(currentIndex + 1);
 		}
 	}
 }

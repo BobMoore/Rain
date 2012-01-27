@@ -39,8 +39,8 @@
       <classpath>
         <pathelement location="src"/>
         <path refid="project.class.path"/>
-        <pathelement location="C:/Users/rmoore/gwt-2.4.0/validation-api-1.0.0.GA.jar" />
-        <pathelement location="C:/Users/rmoore/gwt-2.4.0/validation-api-1.0.0.GA-sources.jar" />
+        <pathelement location="${gwt.sdk}/validation-api-1.0.0.GA.jar" />
+        <pathelement location="${gwt.sdk}/validation-api-1.0.0.GA-sources.jar" />
       </classpath>
       <!-- add jvmarg -Xss16M or similar if you see a StackOverflowError -->
       <jvmarg value="-Xmx256M"/>
@@ -57,8 +57,8 @@
       <classpath>
         <pathelement location="src"/>
         <path refid="project.class.path"/>
-        <pathelement location="C:/Users/rmoore/gwt-2.4.0/validation-api-1.0.0.GA.jar" />
-        <pathelement location="C:/Users/rmoore/gwt-2.4.0/validation-api-1.0.0.GA-sources.jar" />
+        <pathelement location="${gwt.sdk}/validation-api-1.0.0.GA.jar" />
+        <pathelement location="${gwt.sdk}/validation-api-1.0.0.GA-sources.jar" />
       </classpath>
       <jvmarg value="-Xmx256M"/>
       <arg value="-startupUrl"/>

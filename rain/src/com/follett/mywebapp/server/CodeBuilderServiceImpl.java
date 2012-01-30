@@ -30,7 +30,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
   public ArrayList<StepTableData> getSetupPiece(String tagIDs) {
 	  ArrayList<StepTableData> returnable = new ArrayList<StepTableData>();
 	  try {
-		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
 	  } catch (InstantiationException e) {
 		  e.printStackTrace();
 	  } catch (IllegalAccessException e) {
@@ -38,8 +38,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 	  } catch (ClassNotFoundException e) {
 		  e.printStackTrace();
 	  }
-	  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
-	  "databaseName=Rain;user=sa;password=stuffy;";
+	  String url = DatabaseParameters.getDatabaseURL();
 	  Connection conn;
 	  try {
 		  conn = DriverManager.getConnection(url);
@@ -90,9 +89,8 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
   public Boolean saveTest(int testNumber, String testSteps) {
 	  Boolean exception = Boolean.FALSE;
 	  try {
-		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
-		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
-		  "databaseName=Rain;user=sa;password=stuffy;";
+		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
+		  String url = DatabaseParameters.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
 		  String sql = "";
@@ -125,9 +123,8 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
   public Boolean doesTestExist(int testNumber) {
 	  Boolean exists = Boolean.FALSE;
 	  try {
-		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
-		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
-		  "databaseName=Rain;user=sa;password=stuffy;";
+		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
+		  String url = DatabaseParameters.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
 		  String sql = "SELECT COUNT(*) as \"TestExists\"\r\n" +
@@ -156,9 +153,8 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
   public String getTest(int testNumber) {
 	  String returnable = "";
 	  try {
-		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
-		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
-		  "databaseName=Rain;user=sa;password=stuffy;";
+		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
+		  String url = DatabaseParameters.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
 		  String sql = "SELECT Steps FROM dbo.Tests\r\n" +

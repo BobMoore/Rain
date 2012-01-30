@@ -1,5 +1,2 @@
 # Module mywebapp
 # RPC service class, partial path of RPC policy file
-com.follett.mywebapp.server.CodeBuilderService, B552EE7CBF4B8A90461B6A024CC1ED31.gwt.rpc
-com.follett.mywebapp.server.SetupBuilderService, 246ED394092EE7E748A84FAA1F2E0B04.gwt.rpc
-com.follett.mywebapp.server.TreeBuilderService, F854FDE81922B5FD52E8E05F29A57D41.gwt.rpc

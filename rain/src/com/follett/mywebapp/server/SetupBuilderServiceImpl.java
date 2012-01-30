@@ -26,10 +26,9 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 	  SetupDataItem returnable = new SetupDataItem();
 	  try {
 		  //send everything!
-		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
 
-		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
-		  "databaseName=Rain;user=sa;password=stuffy;";
+		  String url = DatabaseParameters.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
 		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.Setup ORDER BY tab");
@@ -74,9 +73,8 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
   public Boolean saveSetupData(SetupDataItem allData) {
 	  Boolean exception = Boolean.FALSE;
 	  try {
-		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
-		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
-		  "databaseName=Rain;user=sa;password=stuffy;";
+		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
+		  String url = DatabaseParameters.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
 		  String sql = "";

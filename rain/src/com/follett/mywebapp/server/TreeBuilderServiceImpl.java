@@ -25,10 +25,9 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
   public HashMap<String, ArrayList<ValidationTreeDataItem>> getTreeItems() {
 	  HashMap<String, ArrayList<ValidationTreeDataItem>> returnable = new HashMap<String, ArrayList<ValidationTreeDataItem>>();
 	  try {
-		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
 		  // TODO get tree items and build them into the tree
-		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
-		  "databaseName=Rain;user=sa;password=stuffy;";
+		  String url = DatabaseParameters.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
 		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.TreeItems ORDER BY parentTagID");
@@ -74,9 +73,8 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
   public Boolean saveTreeItems(ArrayList<ValidationTreeDataItem> nodes) {
 	  Boolean exception = Boolean.FALSE;
 	  try {
-		  Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
-		  String url = "jdbc:sqlserver://127.0.0.1:1433;" +
-		  "databaseName=Rain;user=sa;password=stuffy;";
+		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
+		  String url = DatabaseParameters.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url);
 		  Statement stmt = conn.createStatement();
 		  String sql = "";

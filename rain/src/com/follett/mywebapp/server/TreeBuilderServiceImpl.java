@@ -24,9 +24,10 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
   @Override
   public HashMap<String, ArrayList<ValidationTreeDataItem>> getTreeItems() {
 	  HashMap<String, ArrayList<ValidationTreeDataItem>> returnable = new HashMap<String, ArrayList<ValidationTreeDataItem>>();
+	  ArrayList<ValidationTreeDataItem> exception = new ArrayList<ValidationTreeDataItem>();
+	  exception.add(new ValidationTreeDataItem("","root","Exception", Integer.valueOf(0)));
 	  try {
 		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
-		  // TODO get tree items and build them into the tree
 		  String url = DatabaseParameters.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
@@ -55,18 +56,18 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 		  }
 		  conn.close();
 	  } catch (SQLException e) {
-		  // TODO Auto-generated catch block
-		  e.printStackTrace();
+		  exception.get(0).setDescription(e.toString());
+		  returnable.put("root", exception);
 	  } catch (ClassNotFoundException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	} catch (InstantiationException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	} catch (IllegalAccessException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
+		  exception.get(0).setDescription(e.toString());
+		  returnable.put("root", exception);
+	  } catch (InstantiationException e) {
+		  exception.get(0).setDescription(e.toString());
+		  returnable.put("root", exception);
+	  } catch (IllegalAccessException e) {
+		  exception.get(0).setDescription(e.toString());
+		  returnable.put("root", exception);
+	  }
 	  return returnable;
   }
 

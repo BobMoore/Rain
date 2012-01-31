@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import com.follett.mywebapp.client.SetupBuilderService;
 import com.follett.mywebapp.util.SetupDataItem;
 import com.follett.mywebapp.util.TableData;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;

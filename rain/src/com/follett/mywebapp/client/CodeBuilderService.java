@@ -1,4 +1,4 @@
-package com.follett.mywebapp.server;
+package com.follett.mywebapp.client;
 
 import java.util.ArrayList;
 

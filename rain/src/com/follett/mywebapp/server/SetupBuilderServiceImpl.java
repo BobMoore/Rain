@@ -29,7 +29,7 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
 
 		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url);
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.Setup ORDER BY tab");
 		  String column;
@@ -75,7 +75,7 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 	  try {
 		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
 		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url);
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "";
 		  ArrayList<String> tabs = allData.getTabs();

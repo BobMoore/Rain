@@ -41,7 +41,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 	  String url = DatabaseParameters.getDatabaseURL();
 	  Connection conn;
 	  try {
-		  conn = DriverManager.getConnection(url);
+		  conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String tag = "";
 		  String table = "Setup";
@@ -91,7 +91,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 	  try {
 		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
 		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url);
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "";
 		  sql = "UPDATE dbo.Tests SET " +
@@ -125,7 +125,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 	  try {
 		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
 		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url);
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "SELECT COUNT(*) as \"TestExists\"\r\n" +
 		  		"FROM dbo.tests\r\n" +
@@ -155,7 +155,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 	  try {
 		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
 		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url);
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "SELECT Steps FROM dbo.Tests\r\n" +
 		  		"WHERE TestNumber = "+ testNumber +";";

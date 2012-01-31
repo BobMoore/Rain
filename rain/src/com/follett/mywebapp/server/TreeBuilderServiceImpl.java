@@ -28,7 +28,7 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
 		  // TODO get tree items and build them into the tree
 		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url);
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.TreeItems ORDER BY parentTagID");
 		  String tagID;
@@ -75,7 +75,7 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 	  try {
 		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
 		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url);
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "";
 		  for (ValidationTreeDataItem item : nodes) {

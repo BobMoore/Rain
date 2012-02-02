@@ -1251,7 +1251,7 @@ private Tree buildTree() {
     // Set up the callback object.
     AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>> callback = new AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>>() {
       public void onFailure(Throwable caught) {
-    	  newTree.addItem("Failure!");
+    	  newTree.addItem(caught.getMessage());
       }
 
 	@Override

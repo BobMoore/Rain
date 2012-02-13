@@ -107,35 +107,6 @@ public class mywebapp implements EntryPoint {
 	    buildStepTable();
 
 	    //Listeners
-	    class TreeHandler implements SelectionHandler<TreeItem>{
-
-			@Override
-			public void onSelection(SelectionEvent<TreeItem> event) {
-				ValidationTreeNode selected = (ValidationTreeNode)event.getSelectedItem();
-				getStepFlexTable().setText(getValidationRow(), 0, selected.getText());
-				StepHolder removeStepButton = new StepHolder("x", selected.getTagID());
-				Button moveUp = new Button("Move Up");
-				int buttonOffset = 0;
-				ArrayList<String> descriptions = selected.getDescriptions();
-				if(selected.getFields() != null) {
-					for(int a = 0; a < selected.getFields().intValue(); a++) {
-						TextboxIDHolder box = new TextboxIDHolder(selected.getTagID());
-						if(a < descriptions.size()) {
-							box.setTitle(descriptions.get(a));
-						}
-						getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, box);
-						buttonOffset++;
-					}
-				}
-				removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + ""));
-				moveUp.addClickHandler(new MoveUpStepHandler(getStartKey() + ""));
-				getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, removeStepButton);
-				getStepFlexTable().setWidget(getValidationRow(), 2 + buttonOffset, moveUp);
-				addIdentifierKey(getValidationRow(), getStartKey() + "");
-				bumpValidationRow();
-				bumpStartKey();
-			}
-	    }
 
     class ValidationDialog implements ClickHandler {
 
@@ -240,8 +211,6 @@ public class mywebapp implements EntryPoint {
 	}
 
     // Add a handler to send the name to the server
-    TreeHandler tHandler = new TreeHandler();
-    this.t.addSelectionHandler(tHandler);
     CodeDialog cHandler = new CodeDialog();
     generateCode.addClickHandler(cHandler);
     SaveHandler saveHandler = new SaveHandler();
@@ -1278,6 +1247,40 @@ private Tree buildTree() {
 	}
     };
     this.treeBuildingService.getTreeItems(callback);
+
+    class TreeHandler implements SelectionHandler<TreeItem>{
+
+		@Override
+		public void onSelection(SelectionEvent<TreeItem> event) {
+			ValidationTreeNode selected = (ValidationTreeNode)event.getSelectedItem();
+			getStepFlexTable().setText(getValidationRow(), 0, selected.getText());
+			StepHolder removeStepButton = new StepHolder("x", selected.getTagID());
+			Button moveUp = new Button("Move Up");
+			int buttonOffset = 0;
+			ArrayList<String> descriptions = selected.getDescriptions();
+			if(selected.getFields() != null) {
+				for(int a = 0; a < selected.getFields().intValue(); a++) {
+					TextboxIDHolder box = new TextboxIDHolder(selected.getTagID());
+					if(a < descriptions.size()) {
+						box.setTitle(descriptions.get(a));
+					}
+					getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, box);
+					buttonOffset++;
+				}
+			}
+			removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + ""));
+			moveUp.addClickHandler(new MoveUpStepHandler(getStartKey() + ""));
+			getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, removeStepButton);
+			getStepFlexTable().setWidget(getValidationRow(), 2 + buttonOffset, moveUp);
+			addIdentifierKey(getValidationRow(), getStartKey() + "");
+			bumpValidationRow();
+			bumpStartKey();
+		}
+    }
+
+    TreeHandler tHandler = new TreeHandler();
+    newTree.addSelectionHandler(tHandler);
+
     return newTree;
 }
 

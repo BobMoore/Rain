@@ -29,13 +29,13 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 
-public class SetupDialogBox {
+public class SetupInput {
 
 	private SetupBuilderServiceAsync setupBuildingService = GWT.create(SetupBuilderService.class);
 	private LayoutPanel setupPanel;
 	private mywebapp mainApp;
 
-	public SetupDialogBox (LayoutPanel setupPanel, mywebapp mainApp) {
+	public SetupInput (LayoutPanel setupPanel, mywebapp mainApp) {
 		this.setupPanel = setupPanel;
 		this.setupPanel.add(buildSetupPanel());
 		this.mainApp = mainApp;
@@ -365,8 +365,8 @@ public class SetupDialogBox {
 
 			@Override
 			public void onClick(ClickEvent event) {
-			    if (SetupDialogBox.this.setupBuildingService == null) {
-			    	SetupDialogBox.this.setupBuildingService = GWT.create(SetupBuilderService.class);
+			    if (SetupInput.this.setupBuildingService == null) {
+			    	SetupInput.this.setupBuildingService = GWT.create(SetupBuilderService.class);
 			    }
 
 				AsyncCallback<Boolean> callbackSave = new AsyncCallback<Boolean>() {
@@ -383,8 +383,8 @@ public class SetupDialogBox {
 						}
 					}
 				};
-				SetupDialogBox.this.setupBuildingService.saveSetupData(allData, callbackSave);
-				SetupDialogBox.this.setupBuildingService = null;
+				SetupInput.this.setupBuildingService.saveSetupData(allData, callbackSave);
+				SetupInput.this.setupBuildingService = null;
 			}
 		}
 
@@ -490,7 +490,7 @@ public class SetupDialogBox {
 	    	  }
 
 	    	  Button addSetupButton = new Button("Add this!");
-	    	  AddSetupHandler setupHandler = SetupDialogBox.this.mainApp.new AddSetupHandler(boxesAndButtons, allData);
+	    	  AddSetupHandler setupHandler = SetupInput.this.mainApp.new AddSetupHandler(boxesAndButtons, allData);
 	    	  addSetupButton.addClickHandler(setupHandler);
 	    	  table.setWidget(0, a, addSetupButton);
 	    	  panel.add(table);

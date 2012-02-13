@@ -10,15 +10,12 @@ import com.follett.mywebapp.util.StepHolder;
 import com.follett.mywebapp.util.StepTableData;
 import com.follett.mywebapp.util.TableData;
 import com.follett.mywebapp.util.TextboxIDHolder;
-import com.follett.mywebapp.util.ValidationTreeDataItem;
 import com.follett.mywebapp.util.ValidationTreeNode;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.event.dom.client.BlurEvent;
-import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -37,9 +34,7 @@ import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
-import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -59,14 +54,14 @@ public class mywebapp implements EntryPoint {
 	private ArrayList<String> validationSteps = new ArrayList<String>();
 	private ArrayList<String> identifierKey = new ArrayList<String>();
 	private int startKey = 10;
-	private Tree t;
 	private LayoutPanel treePanel;
 	private LayoutPanel setupPanel;
 	TextBox testNumber;
 
-	private SetupDialogBox setupDialogBox;
+	private SetupInput setupDialogBox;
+	private SetupValidation setupValidationBox;
 
-	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
+
 	private CodeBuilderServiceAsync codeBuildingService = GWT.create(CodeBuilderService.class);
 
   /**
@@ -82,22 +77,17 @@ public class mywebapp implements EntryPoint {
 	    final Button clearTable = new Button("Clear Test");
 	    final LayoutPanel mainPanel = new LayoutPanel();
 	    this.treePanel = new LayoutPanel();
+	    this.setupValidationBox = new SetupValidation(this.treePanel, this);
 	    final ScrollPanel flexPanel = new ScrollPanel();
 	    this.setupPanel = new LayoutPanel();
-	    this.setupDialogBox = new SetupDialogBox(this.setupPanel, this);
+	    this.setupDialogBox = new SetupInput(this.setupPanel, this);
 	    final SplitLayoutPanel testDevelopementPanel = new SplitLayoutPanel();
-	    final Button openValidationDialog = new Button("Edit Validation Steps");
 	    setStepFlexTable(new FlexTable());
-
-	    this.t = buildTree();
 
 	    RootLayoutPanel rp = RootLayoutPanel.get();
 	    rp.add(testDevelopementPanel);
 
-		this.treePanel.add(this.t);
-		this.treePanel.add(openValidationDialog);
-		this.treePanel.setWidgetLeftWidth(openValidationDialog, 1, Unit.EM, 15, Unit.EM);
-		this.treePanel.setWidgetBottomHeight(openValidationDialog, 1, Unit.EM, 3, Unit.EM);
+
 
 		builtStepPanel(saveButton, this.testNumber, generateCode, editSetup, mainPanel, flexPanel, loadTest, clearTable);
 
@@ -107,17 +97,6 @@ public class mywebapp implements EntryPoint {
 
 	    //Listeners
 
-    class ValidationDialog implements ClickHandler {
-
-    	DialogBox dialog;
-
-		@Override
-		public void onClick(ClickEvent event) {
-			this.dialog = createValidationDialogBox();
-			this.dialog.show();
-			this.dialog.center();
-		}
-    }
 
     class SetupDialog implements ClickHandler {
 
@@ -214,8 +193,6 @@ public class mywebapp implements EntryPoint {
     generateCode.addClickHandler(cHandler);
     SaveHandler saveHandler = new SaveHandler();
     saveButton.addClickHandler(saveHandler);
-    ValidationDialog dialogHandler = new ValidationDialog();
-    openValidationDialog.addClickHandler(dialogHandler);
     SetupDialog setupHandler = new SetupDialog();
     editSetup.addClickHandler(setupHandler);
     LoadDialog loadTestHandler = new LoadDialog();
@@ -238,7 +215,6 @@ public DialogBox createCodeDialogBox() {
     //evaluate the size of their window and make this the bulk of it.
     dialogBox.setWidget(buildCodeDialog(closeButton));
     dialogBox.setGlassEnabled(true);
-
     return dialogBox;
 }
 
@@ -564,264 +540,6 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 	return panel;
 }
 
-private DialogBox createValidationDialogBox() {
-	    // Create a dialog box and set the caption text
-	    final DialogBox dialogBox = new DialogBox(false);
-
-	    Button closeButton = new Button(
-	            "Close", new ClickHandler() {
-	              public void onClick(ClickEvent event) {
-	            	resetTree();
-	                dialogBox.hide();
-	              }
-	            });
-
-	    //evaluate the size of their window and make this the bulk of it.
-	    dialogBox.setWidget(buildStepSetup(closeButton));
-	    dialogBox.setGlassEnabled(true);
-	    return dialogBox;
-	  }
-
-private LayoutPanel buildStepSetup(Button closeButton) {
-	LayoutPanel panel = new LayoutPanel();
-	panel.setSize("700px", "700px");
-	final Tree innerTree = buildTree();
-	panel.add(innerTree);
-	panel.setWidgetLeftWidth(innerTree, 1, Unit.EM, 25, Unit.EM);
-	panel.setWidgetTopHeight(innerTree, 1, Unit.EM, 40, Unit.EM);
-
-	final Button saveSteps = new Button("Save All");
-	panel.add(saveSteps);
-	panel.setWidgetBottomHeight(saveSteps, 1, Unit.EM, 3, Unit.EM);
-	panel.setWidgetLeftWidth(saveSteps, 1, Unit.EM, 10, Unit.EM);
-	panel.add(closeButton);
-	panel.setWidgetBottomHeight(closeButton, 1, Unit.EM, 3, Unit.EM);
-	panel.setWidgetLeftWidth(closeButton, 12, Unit.EM, 10, Unit.EM);
-
-	//create the fields in the main panel to fill out the tree items
-	final TextBox tagID = new TextBox();
-	tagID.setReadOnly(true);
-	tagID.setTitle("Internal TagID. This is a non editable field");
-	panel.add(tagID);
-	panel.setWidgetLeftWidth(tagID, 26, Unit.EM, 10, Unit.EM);
-	panel.setWidgetTopHeight(tagID, 1, Unit.EM, 3, Unit.EM);
-	final TextBox parentTagID = new TextBox();
-	parentTagID.setReadOnly(true);
-	parentTagID.setTitle("Internal parentTagID. Please use the button on the right to edit this.");
-	panel.add(parentTagID);
-	panel.setWidgetLeftWidth(parentTagID, 26, Unit.EM, 10, Unit.EM);
-	panel.setWidgetTopHeight(parentTagID, 5, Unit.EM, 3, Unit.EM);
-	final Button updateParent = new Button("Update Parent");
-	panel.add(updateParent);
-	panel.setWidgetLeftWidth(updateParent, 38, Unit.EM, 10, Unit.EM);
-	panel.setWidgetTopHeight(updateParent, 5, Unit.EM, 3, Unit.EM);
-	final TextBox description = new TextBox();
-	description.setTitle("Displayable discription of the step.");
-	panel.add(description);
-	panel.setWidgetLeftWidth(description, 26, Unit.EM, 10, Unit.EM);
-	panel.setWidgetTopHeight(description, 9, Unit.EM, 3, Unit.EM);
-	final TextBox fields = new TextBox();
-	//rewrite... gah
-	fields.setTitle("Number of editable fields to fill out when this step is used.");
-	panel.add(fields);
-	panel.setWidgetLeftWidth(fields, 26, Unit.EM, 10, Unit.EM);
-	panel.setWidgetTopHeight(fields, 13, Unit.EM, 3, Unit.EM);
-	final TextArea fieldDescriptions = new TextArea();
-	panel.add(fieldDescriptions);
-	fieldDescriptions.setTitle("Description of the fields used, seperated by a comma.");
-	panel.setWidgetLeftWidth(fieldDescriptions, 26, Unit.EM, 20, Unit.EM);
-	panel.setWidgetTopHeight(fieldDescriptions, 17, Unit.EM, 6, Unit.EM);
-	final Button newNode = new Button("New Step");
-	panel.add(newNode);
-	panel.setWidgetLeftWidth(newNode, 26, Unit.EM, 7, Unit.EM);
-	panel.setWidgetTopHeight(newNode, 25, Unit.EM, 3, Unit.EM);
-
-	//Create a listener for a the tree to put the selection into the fields in the main panel
-	class TreeHandler implements SelectionHandler<TreeItem>{
-
-		ValidationTreeNode lastSelected = null;
-
-		@Override
-		public void onSelection(SelectionEvent<TreeItem> event) {
-			ValidationTreeNode selected = (ValidationTreeNode)event.getSelectedItem();
-			if(this.lastSelected != null) {
-				try {
-					this.lastSelected.setFields(Integer.valueOf(fields.getText()));
-					this.lastSelected.setText(description.getText().trim());
-					this.lastSelected.setDescriptions(fieldDescriptions.getText());
-				} catch (NumberFormatException e) {
-					this.lastSelected.setFields(Integer.valueOf(0));
-//					t.setSelectedItem(this.lastSelected,true);
-				}
-			}
-			if(updateParent.isEnabled()) {
-				tagID.setText(selected.getTagID());
-				parentTagID.setText(selected.getParentTagID());
-				description.setText(selected.getText());
-				fields.setText(selected.getFields().toString());
-				fieldDescriptions.setText(selected.getDescriptionsToString());
-				this.lastSelected = selected;
-			}else {
-				updateParent.setText("Update Parent");
-				updateParent.setEnabled(true);
-				if(newNode.isEnabled()) {
-					innerTree.removeItem(this.lastSelected);
-					this.lastSelected.setParentTagID(selected.getTagID());
-				}else {
-					this.lastSelected = new ValidationTreeNode(tagID.getText(), selected.getTagID(), "New Step", Integer.valueOf(0));
-					newNode.setEnabled(true);
-				}
-				selected.addItem(this.lastSelected);
-				innerTree.setSelectedItem(this.lastSelected, true);
-			}
-		}
-    }
-
-	final TreeHandler treeHandler = new TreeHandler();
-	innerTree.addSelectionHandler(treeHandler);
-
-	class EnterPressHandler implements KeyPressHandler, BlurHandler{
-
-		@Override
-		public void onKeyPress(KeyPressEvent event) {
-			Object source = event.getSource();
-			if(source instanceof TextBox) {
-				if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
-					SelectionEvent.fire(innerTree, innerTree.getSelectedItem());
-				}
-			}
-		}
-
-		@Override
-		public void onBlur(BlurEvent event) {
-			treeHandler.lastSelected.setDescriptions(fieldDescriptions.getText());
-		}
-	}
-
-	EnterPressHandler enter = new EnterPressHandler();
-	description.addKeyPressHandler(enter);
-	description.addBlurHandler(enter);
-	fields.addKeyPressHandler(enter);
-	fields.addBlurHandler(enter);
-	fieldDescriptions.addKeyPressHandler(enter);
-	fieldDescriptions.addBlurHandler(enter);
-
-	//create a way to change the parent through clicking on the tree
-	//make sure when the parent is changed, the tree is rebuilt and the focus is shifted to the moved location
-
-	class UpdateParentHandler implements ClickHandler {
-
-		@Override
-		public void onClick(ClickEvent event) {
-			if(!parentTagID.getText().isEmpty()) {
-				updateParent.setText("Click new parent");
-				updateParent.setEnabled(false);
-			}
-		}
-	}
-
-	UpdateParentHandler parentHandler = new UpdateParentHandler();
-	updateParent.addClickHandler(parentHandler);
-
-	class NewStepHandler implements ClickHandler {
-
-		@Override
-		public void onClick(ClickEvent event) {
-			String highestTag = getHighestTag(innerTree);
-			newNode.setEnabled(false);
-			tagID.setText(ValidationTreeNode.incrementTagID(highestTag));
-			updateParent.setText("Click new parent");
-			updateParent.setEnabled(false);
-			description.setText("");
-			fields.setText("");
-			fieldDescriptions.setText("");
-		}
-
-	}
-
-	NewStepHandler newNodeHandler = new NewStepHandler();
-	newNode.addClickHandler(newNodeHandler);
-
-	//Add a save tree button that calls a main method to refresh the tree. Also save to the database and have the method call out to the database.
-	class SaveStepsHandler implements ClickHandler {
-
-
-		@Override
-		public void onClick(ClickEvent event) {
-			ArrayList<TreeItem> convertable = getAllItemsFromTree(innerTree);
-			ArrayList<ValidationTreeDataItem> sendable = new ArrayList<ValidationTreeDataItem>();
-			for (TreeItem item : convertable) {
-				ValidationTreeDataItem data = new ValidationTreeDataItem((ValidationTreeNode)item);
-				sendable.add(data);
-			}
-
-		    if (mywebapp.this.treeBuildingService == null) {
-		    	mywebapp.this.treeBuildingService = GWT.create(TreeBuilderService.class);
-		    }
-
-		    AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
-		    	public void onFailure(Throwable caught) {
-		    		System.out.print(caught);
-		    	}
-
-		    	@Override
-		    	public void onSuccess(Boolean success) {
-		    		if(success.booleanValue()) {
-		    			System.out.print("Exception!");
-		    		}
-		    	}
-
-		    };
-		    mywebapp.this.treeBuildingService.saveTreeItems(sendable, callback);
-		}
-
-	}
-	SaveStepsHandler save = new SaveStepsHandler();
-	saveSteps.addClickHandler(save);
-
-	return panel;
-}
-
-private String getHighestTag(Tree tree) {
-	String returnable = "";
-	for(int a = 0; a < tree.getItemCount(); a++) {
-		String compare = compareChildren((ValidationTreeNode)tree.getItem(a));
-		if(returnable.compareTo(compare) < 0) {
-			returnable = compare;
-		}
-	}
-	return returnable;
-}
-
-private ArrayList<TreeItem> getAllItemsFromTree(Tree tree){
-	ArrayList<TreeItem> items = new ArrayList<TreeItem>();
-	for(int a = 0; a < tree.getItemCount(); a++) {
-		items.add(tree.getItem(a));
-		items.addAll(getChildItems(tree.getItem(a)));
-	}
-	return items;
-}
-
-private ArrayList<TreeItem> getChildItems(TreeItem item) {
-	ArrayList<TreeItem> returnable = new ArrayList<TreeItem>();
-	for(int a = 0; a < item.getChildCount(); a++) {
-		returnable.add(item.getChild(a));
-		returnable.addAll(getChildItems(item.getChild(a)));
-	}
-	return returnable;
-}
-
-private String compareChildren(ValidationTreeNode item) {
-	String returnable = item.getTagID();
-	for (int a = 0; a < item.getChildCount(); a++) {
-		String compare = compareChildren((ValidationTreeNode)item.getChild(a));
-		if(returnable.compareTo(compare) < 0) {
-			returnable = compare;
-		}
-	}
-	return returnable;
-}
-
 private void builtStepPanel(final Button saveButton, TextBox testNumber, final Button generateCode,
 		final Button editSetup, final LayoutPanel mainPanel, ScrollPanel flexPanel, Button loadTest, Button clearTable) {
 	mainPanel.add(saveButton);
@@ -849,80 +567,7 @@ private void builtStepPanel(final Button saveButton, TextBox testNumber, final B
 	mainPanel.setWidgetTopHeight(flexPanel, 5, Unit.EM, 100, Unit.EM);
 }
 
-private Tree buildTree() {
-	final Tree newTree = new Tree();
-	// Initialize the service proxy.
-    if (this.treeBuildingService == null) {
-    	this.treeBuildingService = GWT.create(TreeBuilderService.class);
-    }
-
-    // Set up the callback object.
-    AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>> callback = new AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>>() {
-      public void onFailure(Throwable caught) {
-    	  newTree.addItem(caught.getMessage());
-      }
-
-	@Override
-	public void onSuccess(HashMap<String, ArrayList<ValidationTreeDataItem>> result) {
-		ArrayList<ValidationTreeDataItem> roots = result.get("root");
-		for (ValidationTreeDataItem items : roots) {
-			ValidationTreeNode node = new ValidationTreeNode(items);
-			if(result.containsKey(node.getTagID())) {
-				addChildrenToTree(node, result);
-			}
-			newTree.addItem(node);
-		}
-	}
-
-	public void addChildrenToTree(ValidationTreeNode node, HashMap<String, ArrayList<ValidationTreeDataItem>> result) {
-		ArrayList<ValidationTreeDataItem> branches = result.get(node.getTagID());
-		for (ValidationTreeDataItem branch : branches) {
-			ValidationTreeNode leaf = new ValidationTreeNode(branch);
-			if(result.containsKey(leaf.getTagID())) {
-				addChildrenToTree(leaf, result);
-			}
-			node.addItem(leaf);
-		}
-	}
-    };
-    this.treeBuildingService.getTreeItems(callback);
-
-    class TreeHandler implements SelectionHandler<TreeItem>{
-
-		@Override
-		public void onSelection(SelectionEvent<TreeItem> event) {
-			ValidationTreeNode selected = (ValidationTreeNode)event.getSelectedItem();
-			getStepFlexTable().setText(getValidationRow(), 0, selected.getText());
-			StepHolder removeStepButton = new StepHolder("x", selected.getTagID());
-			Button moveUp = new Button("Move Up");
-			int buttonOffset = 0;
-			ArrayList<String> descriptions = selected.getDescriptions();
-			if(selected.getFields() != null) {
-				for(int a = 0; a < selected.getFields().intValue(); a++) {
-					TextboxIDHolder box = new TextboxIDHolder(selected.getTagID());
-					if(a < descriptions.size()) {
-						box.setTitle(descriptions.get(a));
-					}
-					getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, box);
-					buttonOffset++;
-				}
-			}
-			removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + ""));
-			moveUp.addClickHandler(new MoveUpStepHandler(getStartKey() + ""));
-			getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, removeStepButton);
-			getStepFlexTable().setWidget(getValidationRow(), 2 + buttonOffset, moveUp);
-			addIdentifierKey(getValidationRow(), getStartKey() + "");
-			bumpValidationRow();
-			bumpStartKey();
-		}
-    }
-
-    TreeHandler tHandler = new TreeHandler();
-    newTree.addSelectionHandler(tHandler);
-
-    return newTree;
-}
-
+//TODO refactor to take a group of items so that we don't need a reference to mywebapp
 class AddSetupHandler implements ClickHandler {
 
 	  ArrayList<Object> items;
@@ -988,6 +633,36 @@ class AddSetupHandler implements ClickHandler {
 			  bumpStartKey();
 		  }
 	  }
+}
+//TODO refactor to take a group of items so that we don't need a reference to mywebapp
+class TreeHandler implements SelectionHandler<TreeItem>{
+
+	@Override
+	public void onSelection(SelectionEvent<TreeItem> event) {
+		ValidationTreeNode selected = (ValidationTreeNode)event.getSelectedItem();
+		getStepFlexTable().setText(getValidationRow(), 0, selected.getText());
+		StepHolder removeStepButton = new StepHolder("x", selected.getTagID());
+		Button moveUp = new Button("Move Up");
+		int buttonOffset = 0;
+		ArrayList<String> descriptions = selected.getDescriptions();
+		if(selected.getFields() != null) {
+			for(int a = 0; a < selected.getFields().intValue(); a++) {
+				TextboxIDHolder box = new TextboxIDHolder(selected.getTagID());
+				if(a < descriptions.size()) {
+					box.setTitle(descriptions.get(a));
+				}
+				getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, box);
+				buttonOffset++;
+			}
+		}
+		removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + ""));
+		moveUp.addClickHandler(new MoveUpStepHandler(getStartKey() + ""));
+		getStepFlexTable().setWidget(getValidationRow(), 1 + buttonOffset, removeStepButton);
+		getStepFlexTable().setWidget(getValidationRow(), 2 + buttonOffset, moveUp);
+		addIdentifierKey(getValidationRow(), getStartKey() + "");
+		bumpValidationRow();
+		bumpStartKey();
+	}
 }
 
 private void buildMainPanel(final LayoutPanel mainPanel, final LayoutPanel localSetupPanel,
@@ -1076,14 +751,6 @@ class MoveUpStepHandler implements ClickHandler {
 			getStepFlexTable().removeRow(currentIndex + 1);
 		}
 	}
-}
-
-public void resetTree() {
-	this.treePanel.remove(this.t);
-	this.t = buildTree();
-	this.treePanel.add(this.t);
-	this.treePanel.setWidgetLeftWidth(this.t, 0, Unit.PX, 256, Unit.PX);
-	this.treePanel.setWidgetTopHeight(this.t, 0, Unit.PX, 768, Unit.PX);
 }
 
 public void setEditTree(boolean editTree) {

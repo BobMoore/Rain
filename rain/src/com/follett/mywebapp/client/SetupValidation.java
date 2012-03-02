@@ -31,12 +31,11 @@ public class SetupValidation {
 	private TreeBuilderServiceAsync treeBuildingService = GWT.create(TreeBuilderService.class);
 	private LayoutPanel treePanel;
 	private Tree t;
-	private mywebapp mainApp;
+	private TreeHandler tHandler;
 	final Button openValidationDialog = new Button("Edit Validation Steps");
 
-	public SetupValidation (LayoutPanel treePanel, mywebapp mainApp) {
+	public SetupValidation (LayoutPanel treePanel, TreeHandler tHandler) {
 		this.treePanel = treePanel;
-		this.mainApp = mainApp;
 		this.t = buildTree();
 		this.treePanel.add(this.t);
 		this.treePanel.add(this.openValidationDialog);
@@ -44,7 +43,7 @@ public class SetupValidation {
 		this.treePanel.setWidgetBottomHeight(this.openValidationDialog, 1, Unit.EM, 3, Unit.EM);
 		ValidationDialog dialogHandler = new ValidationDialog();
 	    this.openValidationDialog.addClickHandler(dialogHandler);
-	    TreeHandler tHandler = this.mainApp.new TreeHandler();
+	    this.tHandler = tHandler;
 		this.t.addSelectionHandler(tHandler);
 	}
 
@@ -135,7 +134,6 @@ public class SetupValidation {
 						this.lastSelected.setDescriptions(fieldDescriptions.getText());
 					} catch (NumberFormatException e) {
 						this.lastSelected.setFields(Integer.valueOf(0));
-//					t.setSelectedItem(this.lastSelected,true);
 					}
 				}
 				if(updateParent.isEnabled()) {
@@ -312,8 +310,7 @@ public class SetupValidation {
 		this.treePanel.add(this.t);
 		this.treePanel.setWidgetLeftWidth(this.t, 0, Unit.PX, 256, Unit.PX);
 		this.treePanel.setWidgetTopHeight(this.t, 0, Unit.PX, 768, Unit.PX);
-		TreeHandler tHandler = this.mainApp.new TreeHandler();
-		this.t.addSelectionHandler(tHandler);
+		this.t.addSelectionHandler(this.tHandler);
 	}
 
 	private String getHighestTag(Tree tree) {

@@ -33,12 +33,12 @@ public class SetupInput {
 
 	private SetupBuilderServiceAsync setupBuildingService = GWT.create(SetupBuilderService.class);
 	private LayoutPanel setupPanel;
-	private mywebapp mainApp;
+	private ArrayList<AddSetupHandler> sHandler;
 
-	public SetupInput (LayoutPanel setupPanel, mywebapp mainApp) {
+	public SetupInput (LayoutPanel setupPanel, ArrayList<AddSetupHandler> sHandler) {
 		this.setupPanel = setupPanel;
 		this.setupPanel.add(buildSetupPanel());
-		this.mainApp = mainApp;
+		this.sHandler = sHandler;
 	}
 
 	public DialogBox createSetupDialogBox() {
@@ -490,8 +490,8 @@ public class SetupInput {
 	    	  }
 
 	    	  Button addSetupButton = new Button("Add this!");
-	    	  AddSetupHandler setupHandler = SetupInput.this.mainApp.new AddSetupHandler(boxesAndButtons, allData);
-	    	  addSetupButton.addClickHandler(setupHandler);
+	    	  SetupInput.this.sHandler.add(new AddSetupHandler(allData, boxesAndButtons));
+	    	  addSetupButton.addClickHandler(sHandler.get(sHandler.size()));
 	    	  table.setWidget(0, a, addSetupButton);
 	    	  panel.add(table);
 	      }

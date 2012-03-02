@@ -56,6 +56,8 @@ public class mywebapp implements EntryPoint {
 	private int startKey = 10;
 	private LayoutPanel treePanel;
 	private LayoutPanel setupPanel;
+	private LayoutPanel mainPanel = new LayoutPanel();
+	final ScrollPanel flexPanel = new ScrollPanel();
 	TextBox testNumber;
 
 	private SetupInput setupDialogBox;
@@ -75,23 +77,27 @@ public class mywebapp implements EntryPoint {
 	    final Button generateCode = new Button("Generate Code");
 	    final Button editSetup = new Button("Edit Setup");
 	    final Button clearTable = new Button("Clear Test");
-	    final LayoutPanel mainPanel = new LayoutPanel();
 	    this.treePanel = new LayoutPanel();
-	    this.setupValidationBox = new SetupValidation(this.treePanel, this);
-	    final ScrollPanel flexPanel = new ScrollPanel();
+	    this.setupValidationBox = new SetupValidation(this.treePanel, new TreeHandler());
 	    this.setupPanel = new LayoutPanel();
-	    this.setupDialogBox = new SetupInput(this.setupPanel, this);
+	    this.setupDialogBox = new SetupInput(this.setupPanel, new ArrayList<AddSetupHandler>());
 	    final SplitLayoutPanel testDevelopementPanel = new SplitLayoutPanel();
 	    setStepFlexTable(new FlexTable());
 
 	    RootLayoutPanel rp = RootLayoutPanel.get();
 	    rp.add(testDevelopementPanel);
 
+	    testDevelopementPanel.setWidth(""+ rp.getOffsetWidth() + "px");
+	    int offsetWidth85 = (int) (rp.getOffsetWidth() * .85);
+		this.mainPanel.setWidth("" + offsetWidth85 + "px");
+	    this.setupPanel.setWidth("" + offsetWidth85 + "px");
+	    int offsetWidth15 = (int) (rp.getOffsetWidth()*.15);
+		this.treePanel.setWidth("" + offsetWidth15 + "px");
+		int offsetHeight75 = (int) (rp.getOffsetHeight() * .75);
+		int offsetHeight25 = (int) (rp.getOffsetHeight() * .25);
 
-
-		builtStepPanel(saveButton, this.testNumber, generateCode, editSetup, mainPanel, flexPanel, loadTest, clearTable);
-
-	    buildMainPanel(mainPanel, this.setupPanel, testDevelopementPanel, this.treePanel);
+	    buildStepPanel(saveButton, this.testNumber, generateCode, editSetup, this.mainPanel, flexPanel, loadTest, clearTable, offsetWidth85, offsetHeight75);
+	    buildMainPanel(this.mainPanel, this.setupPanel, testDevelopementPanel, this.treePanel, offsetWidth15, offsetHeight25);
 
 	    buildStepTable();
 
@@ -295,7 +301,6 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 				mywebapp.this.codeBuildingService = GWT.create(CodeBuilderService.class);
 		    }
 
-		    // Set up the callback object.
 		    AsyncCallback<Boolean> callbackCheck = new AsyncCallback<Boolean>() {
 		    	@Override
 		    	public void onFailure(Throwable caught) {
@@ -540,101 +545,98 @@ private LayoutPanel buildLoadTestDialog(final Button closeButton) {
 	return panel;
 }
 
-private void builtStepPanel(final Button saveButton, TextBox testNumber, final Button generateCode,
-		final Button editSetup, final LayoutPanel mainPanel, ScrollPanel flexPanel, Button loadTest, Button clearTable) {
-	mainPanel.add(saveButton);
-	mainPanel.setWidgetLeftWidth(saveButton, 1, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(saveButton, 1, Unit.EM, 3, Unit.EM);
-	mainPanel.add(testNumber);
-	mainPanel.setWidgetLeftWidth(testNumber, 12, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(testNumber, 1, Unit.EM, 3, Unit.EM);
-	mainPanel.add(loadTest);
-	mainPanel.setWidgetLeftWidth(loadTest, 23, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(loadTest, 1, Unit.EM, 3, Unit.EM);
-	mainPanel.add(generateCode);
-	mainPanel.setWidgetLeftWidth(generateCode, 34, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(generateCode, 1, Unit.EM, 3, Unit.EM);
-	mainPanel.add(editSetup);
-	mainPanel.setWidgetLeftWidth(editSetup, 45, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(editSetup, 1, Unit.EM, 3, Unit.EM);
-	mainPanel.add(clearTable);
-	mainPanel.setWidgetLeftWidth(clearTable, 56, Unit.EM, 10, Unit.EM);
-	mainPanel.setWidgetTopHeight(clearTable, 1, Unit.EM, 3, Unit.EM);
+private void buildStepPanel(final Button saveButton, TextBox testNumber, final Button generateCode,
+		final Button editSetup, final LayoutPanel mp, ScrollPanel flexPanel, Button loadTest, Button clearTable, int offsetWidth, int offsetHeight75) {
+	int buttonHeightOffset = (int) (offsetHeight75 * .05);
+	int buttonTopOffset = (int) (offsetHeight75 * .01);
+	int buttonWidthOffset = (int) (offsetWidth * .15);
+	double sixButtons = 100/6;
+	ArrayList<Object> buttons = new ArrayList<Object>();
+	buttons.add(saveButton);
+	buttons.add(testNumber);
+	buttons.add(loadTest);
+	buttons.add(generateCode);
+	buttons.add(editSetup);
+	buttons.add(clearTable);
+	for(int a = 0; a < 6; a++) {
+		mp.add((Widget) buttons.get(a));
+		mp.setWidgetLeftWidth((Widget) buttons.get(a), (offsetWidth * ((.01 * (sixButtons * a)) + .02)), Unit.PX, buttonWidthOffset, Unit.PX);
+		mp.setWidgetTopHeight((Widget) buttons.get(a), buttonTopOffset, Unit.PX, buttonHeightOffset, Unit.PX);
+	}
 	flexPanel.add(this.stepFlexTable);
-	flexPanel.ensureVisible(this.stepFlexTable);
-	mainPanel.add(flexPanel);
-	mainPanel.setWidgetLeftWidth(flexPanel, 1, Unit.EM, 100, Unit.EM);
-	mainPanel.setWidgetTopHeight(flexPanel, 5, Unit.EM, 100, Unit.EM);
+	mp.add(flexPanel);
+	mp.setWidgetLeftWidth(flexPanel, offsetWidth * .01, Unit.PX, offsetWidth * .95, Unit.PX);
+	mp.setWidgetTopHeight(flexPanel, offsetHeight75 * .08, Unit.PX, offsetHeight75 * .92, Unit.PX);
+	System.out.print(offsetHeight75);
 }
 
-//TODO refactor to take a group of items so that we don't need a reference to mywebapp
 class AddSetupHandler implements ClickHandler {
 
 	  ArrayList<Object> items;
 	  HashMap<String, TableData> fullData;
 
-	  public AddSetupHandler(ArrayList<Object> items, HashMap<String, TableData> data) {
-		  this.items = items;
+	  public AddSetupHandler(HashMap<String, TableData> data, ArrayList<Object> items) {
 		  this.fullData = data;
+		  this.items = items;
 	  }
 
 	  @Override
 	  public void onClick(ClickEvent event) {
-
-		  //scroll through the objects and grab which ones I need
-		  int column = 0;
-		  String label = "";
-		  Boolean checked = Boolean.FALSE;
-		  boolean rowBump = false;
-		  StepHolder removeStepButton = new StepHolder("x");
-		  Button moveUp = new Button("Move Up");
-		  for (Object obj : this.items) {
-			  if(obj instanceof CheckBox) {
-				  CheckBox box = (CheckBox)obj;
-				  label = box.getText();
-				  checked = box.getValue();
-			  }
-			  if(obj instanceof RadioButton) {
-				  RadioButton button = (RadioButton)obj;
-				  label = button.getText();
-				  checked = button.getValue();
-			  }
-			  if(checked.booleanValue()) {
-				  if(!rowBump) {
-					  getStepFlexTable().insertRow(getSetupRow());
-					  rowBump = true;
+			  //scroll through the objects and grab which ones I need
+			  int column = 0;
+			  String label = "";
+			  Boolean checked = Boolean.FALSE;
+			  boolean rowBump = false;
+			  StepHolder removeStepButton = new StepHolder("x");
+			  Button moveUp = new Button("Move Up");
+			  for (Object obj : this.items) {
+				  if(obj instanceof CheckBox) {
+					  CheckBox box = (CheckBox)obj;
+					  label = box.getText();
+					  checked = box.getValue();
 				  }
-				  getStepFlexTable().setText(getSetupRow(), column, label);
-				  column++;
-				  if(this.fullData.containsKey(label)) {
-					  TableData data = this.fullData.get(label);
-					  if(data.getTextfields() != null) {
-						  ArrayList<String> descriptions = data.getDescriptions();
-						  for(int c = 0; c < data.getTextfields().intValue(); c++) {
-							  TextboxIDHolder box = new TextboxIDHolder(data.getTagID());
-							  if(c<descriptions.size()) {
-								  box.setTitle(descriptions.get(c));
-							  }
-							  getStepFlexTable().setWidget(getSetupRow(), column, box);
-							  column++;
-						  }
+				  if(obj instanceof RadioButton) {
+					  RadioButton button = (RadioButton)obj;
+					  label = button.getText();
+					  checked = button.getValue();
+				  }
+				  if(checked.booleanValue()) {
+					  if(!rowBump) {
+						  getStepFlexTable().insertRow(getSetupRow());
+						  rowBump = true;
 					  }
-					  removeStepButton.addTagID(data.getTagID());
+					  getStepFlexTable().setText(getSetupRow(), column, label);
+					  column++;
+					  if(this.fullData.containsKey(label)) {
+						  TableData data = this.fullData.get(label);
+						  if(data.getTextfields() != null) {
+							  ArrayList<String> descriptions = data.getDescriptions();
+							  for(int c = 0; c < data.getTextfields().intValue(); c++) {
+								  TextboxIDHolder box = new TextboxIDHolder(data.getTagID());
+								  if(c<descriptions.size()) {
+									  box.setTitle(descriptions.get(c));
+								  }
+								  getStepFlexTable().setWidget(getSetupRow(), column, box);
+								  column++;
+							  }
+						  }
+						  removeStepButton.addTagID(data.getTagID());
+					  }
 				  }
+				  if(rowBump) {
+				  removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + "", 0));
+				  moveUp.addClickHandler(new MoveUpStepHandler(getStartKey() + "", 0));
+				  getStepFlexTable().setWidget(getSetupRow(), column, removeStepButton);
+				  getStepFlexTable().setWidget(getSetupRow(), column + 1, moveUp);
+				  addIdentifierKey(getSetupRow(), getStartKey() + "");
+				  bumpSetupRow();
+				  bumpStartKey();
 			  }
-		  }
-		  if(rowBump) {
-			  removeStepButton.addClickHandler(new RemoveStepHandler(getStartKey() + "", 0));
-			  moveUp.addClickHandler(new MoveUpStepHandler(getStartKey() + "", 0));
-			  getStepFlexTable().setWidget(getSetupRow(), column, removeStepButton);
-			  getStepFlexTable().setWidget(getSetupRow(), column + 1, moveUp);
-			  addIdentifierKey(getSetupRow(), getStartKey() + "");
-			  bumpSetupRow();
-			  bumpStartKey();
+			  mywebapp.this.flexPanel.setHeight((getStepFlexTable().getOffsetHeight() + 100) + "px");
 		  }
 	  }
 }
-//TODO refactor to take a group of items so that we don't need a reference to mywebapp
+
 class TreeHandler implements SelectionHandler<TreeItem>{
 
 	@Override
@@ -662,14 +664,15 @@ class TreeHandler implements SelectionHandler<TreeItem>{
 		addIdentifierKey(getValidationRow(), getStartKey() + "");
 		bumpValidationRow();
 		bumpStartKey();
+		mywebapp.this.mainPanel.setHeight((getStepFlexTable().getOffsetHeight() + 100) + "px");
 	}
 }
 
-private void buildMainPanel(final LayoutPanel mainPanel, final LayoutPanel localSetupPanel,
-		SplitLayoutPanel p, LayoutPanel westPanel) {
-	p.addWest(westPanel, 256);
-	p.addNorth(localSetupPanel, 256);
-	p.add(mainPanel);
+private void buildMainPanel(final LayoutPanel mainPanel2, final LayoutPanel localSetupPanel,
+		SplitLayoutPanel p, LayoutPanel westPanel, int offsetWidth15, int offsetHeight25) {
+	p.addWest(westPanel, offsetWidth15);
+	p.addNorth(localSetupPanel, offsetHeight25);
+	p.add(mainPanel2);
 }
 
 private void buildStepTable() {
@@ -820,8 +823,6 @@ public void bumpSetupRow() {
 public void reduceSetupRow() {
 	this.setupRow--;
 }
-
-
 
 private CodeContainer extractCode() {
 	CodeContainer testCode = new CodeContainer();

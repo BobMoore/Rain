@@ -490,7 +490,7 @@ public class SetupInput {
 	    	  }
 
 	    	  Button addSetupButton = new Button("Add this!");
-	    	  SetupInput.this.sHandler.add(new AddSetupHandler(allData, boxesAndButtons));
+//	    	  SetupInput.this.sHandler.add(new AddSetupHandler(allData, boxesAndButtons));
 	    	  addSetupButton.addClickHandler(sHandler.get(sHandler.size()));
 	    	  table.setWidget(0, a, addSetupButton);
 	    	  panel.add(table);

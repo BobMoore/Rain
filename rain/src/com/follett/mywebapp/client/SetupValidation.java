@@ -279,12 +279,14 @@ public class SetupValidation {
 			@Override
 			public void onSuccess(HashMap<String, ArrayList<ValidationTreeDataItem>> result) {
 				ArrayList<ValidationTreeDataItem> roots = result.get("root");
-				for (ValidationTreeDataItem items : roots) {
-					ValidationTreeNode node = new ValidationTreeNode(items);
-					if(result.containsKey(node.getTagID())) {
-						addChildrenToTree(node, result);
+				if(roots != null) {
+					for (ValidationTreeDataItem items : roots) {
+						ValidationTreeNode node = new ValidationTreeNode(items);
+						if(result.containsKey(node.getTagID())) {
+							addChildrenToTree(node, result);
+						}
+						newTree.addItem(node);
 					}
-					newTree.addItem(node);
 				}
 			}
 

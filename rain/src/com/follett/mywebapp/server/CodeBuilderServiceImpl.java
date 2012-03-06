@@ -31,7 +31,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
   public ArrayList<StepTableData> getSetupPiece(String tagIDs) {
 	  ArrayList<StepTableData> returnable = new ArrayList<StepTableData>();
 	  try {
-		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
+		  Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
 	  } catch (InstantiationException e) {
 		  e.printStackTrace();
 	  } catch (IllegalAccessException e) {
@@ -39,10 +39,10 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 	  } catch (ClassNotFoundException e) {
 		  e.printStackTrace();
 	  }
-	  String url = DatabaseParameters.getDatabaseURL();
+	  String url = DatabaseParameterBean.getDatabaseURL();
 	  Connection conn;
 	  try {
-		  conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
+		  conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String tag = "";
 		  String table = "Setup";
@@ -90,9 +90,9 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
   public Boolean saveTest(int testNumber, String testSteps) {
 	  Boolean exception = Boolean.FALSE;
 	  try {
-		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
-		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
+		  Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
+		  String url = DatabaseParameterBean.getDatabaseURL();
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "";
 		  sql = "UPDATE dbo.Tests SET " +
@@ -124,9 +124,9 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
   public Boolean doesTestExist(int testNumber) {
 	  Boolean exists = Boolean.FALSE;
 	  try {
-		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
-		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
+		  Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
+		  String url = DatabaseParameterBean.getDatabaseURL();
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "SELECT COUNT(*) as \"TestExists\"\r\n" +
 		  		"FROM dbo.tests\r\n" +
@@ -154,9 +154,9 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
   public String getTest(int testNumber) {
 	  String returnable = "";
 	  try {
-		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
-		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
+		  Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
+		  String url = DatabaseParameterBean.getDatabaseURL();
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "SELECT Steps FROM dbo.Tests\r\n" +
 		  		"WHERE TestNumber = "+ testNumber +";";

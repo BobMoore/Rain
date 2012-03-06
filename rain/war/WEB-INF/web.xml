@@ -12,6 +12,16 @@
     <servlet-name>TreeBuilderServiceImpl</servlet-name>
     <url-pattern>/mywebapp/treeBuilder</url-pattern>
   </servlet-mapping>
+  
+  <servlet>
+    <servlet-name>DatabaseBuilderServiceImpl</servlet-name>
+    <servlet-class>com.follett.mywebapp.server.DatabaseBuilderServiceImpl</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>DatabaseBuilderServiceImpl</servlet-name>
+    <url-pattern>/mywebapp/databaseBuilder</url-pattern>
+  </servlet-mapping>
 
   <servlet>
     <servlet-name>CodeBuilderServiceImpl</servlet-name>

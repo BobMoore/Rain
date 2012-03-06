@@ -27,10 +27,10 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 	  SetupDataItem returnable = new SetupDataItem();
 	  try {
 		  //send everything!
-		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
+		  Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
 
-		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
+		  String url = DatabaseParameterBean.getDatabaseURL();
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.Setup ORDER BY tab");
 		  String column;
@@ -74,9 +74,9 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
   public Boolean saveSetupData(SetupDataItem allData) {
 	  Boolean exception = Boolean.FALSE;
 	  try {
-		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
-		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
+		  Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
+		  String url = DatabaseParameterBean.getDatabaseURL();
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "";
 		  ArrayList<String> tabs = allData.getTabs();

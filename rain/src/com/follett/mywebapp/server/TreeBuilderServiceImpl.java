@@ -28,9 +28,9 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 	  ArrayList<ValidationTreeDataItem> exception = new ArrayList<ValidationTreeDataItem>();
 	  exception.add(new ValidationTreeDataItem("","root","Exception", Integer.valueOf(0)));
 	  try {
-		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
-		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
+		  Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
+		  String url = DatabaseParameterBean.getDatabaseURL();
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.TreeItems ORDER BY parentTagID");
 		  String tagID;
@@ -75,9 +75,9 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
   public Boolean saveTreeItems(ArrayList<ValidationTreeDataItem> nodes) {
 	  Boolean exception = Boolean.FALSE;
 	  try {
-		  Class.forName(DatabaseParameters.getTDSDriver()).newInstance();
-		  String url = DatabaseParameters.getDatabaseURL();
-		  Connection conn = DriverManager.getConnection(url, DatabaseParameters.getConnectionProperties());
+		  Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
+		  String url = DatabaseParameterBean.getDatabaseURL();
+		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "";
 		  for (ValidationTreeDataItem item : nodes) {

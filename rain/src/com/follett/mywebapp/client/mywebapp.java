@@ -59,17 +59,44 @@ public class mywebapp implements EntryPoint {
 	private LayoutPanel mainPanel = new LayoutPanel();
 	final ScrollPanel flexPanel = new ScrollPanel();
 	TextBox testNumber;
+	private Boolean databasePresent = Boolean.FALSE;
 
 	private SetupInput setupDialogBox;
 	private SetupValidation setupValidationBox;
 
 
 	private CodeBuilderServiceAsync codeBuildingService = GWT.create(CodeBuilderService.class);
+	private DatabaseBuilderServiceAsync databaseBuildingService = GWT.create(DatabaseBuilderService.class);
 
   /**
    * This is the entry point method.
    */
   public void onModuleLoad() {
+
+	  AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
+
+		  @Override
+		  public void onFailure(Throwable caught) {
+			  System.out.print("Failure!");
+		  }
+
+		  @Override
+		  public void onSuccess(Boolean result) {
+			  if(result.booleanValue()) {
+				  paintMainPage();
+			  } else {
+				  DialogBox dialog;
+				  dialog = createDatabaseDialogBox();
+				  dialog.show();
+				  dialog.center();
+			  }
+		  }
+	  };
+
+	  this.databaseBuildingService.checkDatabase(callback);
+  }
+
+  public void paintMainPage() {
 
 	    final Button saveButton = new Button("Save Test");
 	    this.testNumber = new TextBox();
@@ -96,10 +123,11 @@ public class mywebapp implements EntryPoint {
 		int offsetHeight75 = (int) (rp.getOffsetHeight() * .75);
 		int offsetHeight25 = (int) (rp.getOffsetHeight() * .25);
 
-	    buildStepPanel(saveButton, this.testNumber, generateCode, editSetup, this.mainPanel, flexPanel, loadTest, clearTable, offsetWidth85, offsetHeight75);
-	    buildMainPanel(this.mainPanel, this.setupPanel, testDevelopementPanel, this.treePanel, offsetWidth15, offsetHeight25);
 
-	    buildStepTable();
+		buildStepPanel(saveButton, this.testNumber, generateCode, editSetup, this.mainPanel, flexPanel, loadTest, clearTable, offsetWidth85, offsetHeight75);
+		buildMainPanel(this.mainPanel, this.setupPanel, testDevelopementPanel, this.treePanel, offsetWidth15, offsetHeight25);
+
+		buildStepTable();
 
 	    //Listeners
 
@@ -250,6 +278,67 @@ private LayoutPanel buildCodeDialog(Button closeButton) {
 		}
 	};
 	mywebapp.this.codeBuildingService.generateTemplatedCode(testCode, callback);
+
+	return panel;
+}
+
+public DialogBox createDatabaseDialogBox() {
+
+	final DialogBox dialogBox = new DialogBox(false);
+
+	Button closeButton = new Button(
+			"Close", new ClickHandler() {
+				public void onClick(ClickEvent event) {
+					System.out.print("Clicked! : " + getDatabasePresent().booleanValue());
+					if(getDatabasePresent().booleanValue()) {
+						dialogBox.hide();
+						paintMainPage();
+					}
+				}
+			});
+
+	//evaluate the size of their window and make this the bulk of it.
+	dialogBox.setWidget(buildDatabaseDialog(closeButton));
+	dialogBox.setGlassEnabled(true);
+	return dialogBox;
+}
+
+private LayoutPanel buildDatabaseDialog(final Button closeButton) {
+	final LayoutPanel panel = new LayoutPanel();
+	if (mywebapp.this.codeBuildingService == null) {
+		mywebapp.this.codeBuildingService = GWT.create(SetupBuilderService.class);
+	}
+
+	panel.setSize("500px", "250px");
+	final Label label = new Label();
+	label.setText("Rain was unable to detect a database. Would you like to create one now?");
+	panel.add(label);
+	Button generateDB = new Button("Generate!");
+	panel.add(generateDB);
+	panel.setWidgetBottomHeight(generateDB, 32, Unit.PX, 30, Unit.PX);
+	panel.add(closeButton);
+	panel.setWidgetBottomHeight(closeButton, 1, Unit.PX, 30, Unit.PX);
+
+	generateDB.addClickHandler(new ClickHandler() {
+
+		@Override
+		public void onClick(ClickEvent event) {
+			AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
+
+				@Override
+				public void onFailure(Throwable caught) {
+					System.out.print("Failure! " + caught.toString());
+				}
+
+				@Override
+				public void onSuccess(Boolean result) {
+					setDatabasePresent(Boolean.TRUE);
+					closeButton.click();
+				}
+			};
+			mywebapp.this.databaseBuildingService.buildDatabase(callback);
+		}
+	});
 
 	return panel;
 }
@@ -892,6 +981,14 @@ private CodeContainer extractCode() {
 		}
 	}
 	return testCode;
+}
+
+public Boolean getDatabasePresent() {
+	return databasePresent;
+}
+
+public void setDatabasePresent(Boolean databasePresent) {
+	this.databasePresent = databasePresent;
 }
 }
 

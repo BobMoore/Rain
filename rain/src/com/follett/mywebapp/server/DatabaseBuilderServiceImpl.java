@@ -64,7 +64,9 @@ public class DatabaseBuilderServiceImpl extends RemoteServiceServlet implements 
 			Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
 			String url = DatabaseParameterBean.getDatabaseURL();
 			Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
-			success = Boolean.TRUE;
+			if(conn != null) {
+				success = Boolean.TRUE;
+			}
 		} catch (InstantiationException e) {
 			success = Boolean.FALSE;
 		} catch (IllegalAccessException e) {

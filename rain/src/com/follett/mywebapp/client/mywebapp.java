@@ -991,25 +991,7 @@ public class mywebapp implements EntryPoint {
 			}
 
 			// Set up the callback object.
-			AsyncCallback<SetupDataItem> callback = new AsyncCallback<SetupDataItem>() {
-				public void onFailure(Throwable caught) {
-				}
-
-				@Override
-				public void onSuccess(SetupDataItem result) {
-					allData.setData(result);
-					ArrayList<String> tabs = result.getTabs();
-					for (String tab : tabs) {
-						TreeItem tabItem = new TreeItem(tab);
-						ArrayList<String> columns = result.getColumnsOnTab(tab);
-						for (String column : columns) {
-							TreeItem columnItem = new TreeItem(column);
-							tabItem.addItem(columnItem);
-						}
-						setupTree.addItem(tabItem);
-					}
-				}
-			};
+			AsyncCallback<SetupDataItem> callback = buildTreeCallback(setupTree, allData);
 
 			class SetupHandler implements SelectionHandler<TreeItem>{
 				String lastColumn = null;
@@ -1270,20 +1252,7 @@ public class mywebapp implements EntryPoint {
 						SetupInput.this.setupBuildingService = GWT.create(SetupBuilderService.class);
 					}
 
-					AsyncCallback<Boolean> callbackSave = new AsyncCallback<Boolean>() {
-
-						@Override
-						public void onFailure(Throwable caught) {
-							System.out.print("Failure!");
-						}
-
-						@Override
-						public void onSuccess(Boolean result) {
-							if(result.booleanValue()) {
-								System.out.print("Exception!");
-							}
-						}
-					};
+					AsyncCallback<Boolean> callbackSave = saveSetupDataCallback();
 					SetupInput.this.setupBuildingService.saveSetupData(allData, callbackSave);
 					SetupInput.this.setupBuildingService = null;
 				}
@@ -1500,6 +1469,46 @@ public class mywebapp implements EntryPoint {
 					closeButton.click();
 				} else {
 					errorLabel.setText("Test is not there!");
+				}
+			}
+		};
+	}
+
+	private AsyncCallback<SetupDataItem> buildTreeCallback(
+			final Tree setupTree, final SetupDataItem allData) {
+		return new AsyncCallback<SetupDataItem>() {
+			public void onFailure(Throwable caught) {
+			}
+
+			@Override
+			public void onSuccess(SetupDataItem result) {
+				allData.setData(result);
+				ArrayList<String> tabs = result.getTabs();
+				for (String tab : tabs) {
+					TreeItem tabItem = new TreeItem(tab);
+					ArrayList<String> columns = result.getColumnsOnTab(tab);
+					for (String column : columns) {
+						TreeItem columnItem = new TreeItem(column);
+						tabItem.addItem(columnItem);
+					}
+					setupTree.addItem(tabItem);
+				}
+			}
+		};
+	}
+
+	private AsyncCallback<Boolean> saveSetupDataCallback() {
+		return new AsyncCallback<Boolean>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+				System.out.print("Failure!");
+			}
+
+			@Override
+			public void onSuccess(Boolean result) {
+				if(result.booleanValue()) {
+					System.out.print("Exception!");
 				}
 			}
 		};

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.follett.mywebapp.client.TreeBuilderService;
+import com.follett.mywebapp.util.DBNames;
 import com.follett.mywebapp.util.ValidationTreeDataItem;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -32,18 +33,18 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 		  String url = DatabaseParameterBean.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
-		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.TreeItems ORDER BY parentTagID");
+		  ResultSet rs = stmt.executeQuery("SELECT * FROM " + DBNames.TABLE_VALIDATION + " ORDER BY " + DBNames.VALIDATION_PARENT_TAG_ID);
 		  String tagID;
 		  String parentTagID;
 		  String description;
 		  Integer fields;
 		  String fieldDescriptions;
 		  while(rs.next()) {
-			  tagID = rs.getString("tagID");
-			  parentTagID = rs.getString("parentTagID");
-			  description = rs.getString("label");
-			  fields = Integer.valueOf(rs.getInt("textfields"));
-			  fieldDescriptions = rs.getString("fieldDescriptions");
+			  tagID = rs.getString(DBNames.TAGID);
+			  parentTagID = rs.getString(DBNames.VALIDATION_PARENT_TAG_ID);
+			  description = rs.getString(DBNames.LABEL);
+			  fields = Integer.valueOf(rs.getInt(DBNames.TEXTFIELDS));
+			  fieldDescriptions = rs.getString(DBNames.FIELD_DESCRIPTIONS);
 			  ValidationTreeDataItem item = new ValidationTreeDataItem(tagID, parentTagID, description, fields);
 			  item.addDescriptions(fieldDescriptions);
 			  ArrayList<ValidationTreeDataItem> currentList;
@@ -82,20 +83,24 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 		  String sql = "";
 		  for (ValidationTreeDataItem item : nodes) {
 			  sql = "UPDATE dbo.TreeItems SET " +
-			  "parentTagID = '" + item.getParentTagID() + "', " +
-			  "description = '" + item.getDescription() + "', " +
-			  "fields = '" + item.getFields() + "', " +
-			  "fieldDescriptions = '" + item.getDescriptionsToString() + "' " +
+			  DBNames.VALIDATION_PARENT_TAG_ID +" = '" + item.getParentTagID() + "', " +
+			  DBNames.LABEL + " = '" + item.getDescription() + "', " +
+			  DBNames.TEXTFIELDS + " = '" + item.getFields() + "', " +
+			  DBNames.FIELD_DESCRIPTIONS + " = '" + item.getDescriptionsToString() + "' " +
 			  "WHERE tagID = '" + item.getTagID() + "'";
 			  int success = stmt.executeUpdate(sql);
 			  if(success == 0) {
 				  sql = "INSERT INTO dbo.TreeItems " +
-				  "(tagID, parentTagID, description, fields, fieldDescriptions) values (" +
-				  "'" + item.getTagID() + "', " +
-				  "'" + item.getParentTagID() + "', " +
-				  "'" + item.getDescription() + "', " +
-				  "'" + item.getFields() + "', " +
-				  "'" + item.getDescriptionsToString() + "') ";
+				  	"(" + DBNames.TAGID + " , " +
+				  	DBNames.VALIDATION_PARENT_TAG_ID + " , " +
+				  	DBNames.LABEL + " , " +
+				  	DBNames.TEXTFIELDS + "," +
+				  	DBNames.FIELD_DESCRIPTIONS + ") values (" +
+				  	"'" + item.getTagID() + "', " +
+				  	"'" + item.getParentTagID() + "', " +
+				  	"'" + item.getDescription() + "', " +
+				  	"'" + item.getFields() + "', " +
+				  	"'" + item.getDescriptionsToString() + "') ";
 				  success = stmt.executeUpdate(sql);
 			  }
 		  }

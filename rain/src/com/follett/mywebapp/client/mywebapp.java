@@ -224,7 +224,6 @@ public class mywebapp implements EntryPoint {
 		}
 	}
 
-    // Add a handler to send the name to the server
     CodeDialog cHandler = new CodeDialog();
     generateCode.addClickHandler(cHandler);
     SaveHandler saveHandler = new SaveHandler();

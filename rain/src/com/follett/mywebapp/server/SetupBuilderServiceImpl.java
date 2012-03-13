@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import com.follett.mywebapp.client.SetupBuilderService;
+import com.follett.mywebapp.util.DBNames;
 import com.follett.mywebapp.util.SetupDataItem;
 import com.follett.mywebapp.util.TableData;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
@@ -32,7 +33,7 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 		  String url = DatabaseParameterBean.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
-		  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo.Setup ORDER BY tab");
+		  ResultSet rs = stmt.executeQuery("SELECT * FROM " + DBNames.TABLE_SETUP + " ORDER BY " + DBNames.SETUP_TAB);
 		  String column;
 		  String tagID;
 		  boolean checkbox;
@@ -41,13 +42,13 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 		  String tab;
 		  String fieldDescriptions;
 		  while(rs.next()) {
-			  column = rs.getString("columnHeading");
-			  tagID = rs.getString("tagID");
-			  checkbox = rs.getBoolean("checkbox");
-			  label = rs.getString("label");
-			  fields = Integer.valueOf(rs.getInt("textfields"));
-			  tab = rs.getString("tab");
-			  fieldDescriptions = rs.getString("fieldDescriptions");
+			  column = rs.getString(DBNames.SETUP_COLUMN_HEADING);
+			  tagID = rs.getString(DBNames.TAGID);
+			  checkbox = rs.getBoolean(DBNames.SETUP_CHECKBOX);
+			  label = rs.getString(DBNames.LABEL);
+			  fields = Integer.valueOf(rs.getInt(DBNames.TEXTFIELDS));
+			  tab = rs.getString(DBNames.SETUP_TAB);
+			  fieldDescriptions = rs.getString(DBNames.FIELD_DESCRIPTIONS);
 			  TableData data = new TableData(tagID, label, checkbox, fields);
 			  data.addDescriptions(fieldDescriptions);
 			  returnable.addTab(tab);
@@ -56,18 +57,14 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 		  }
 		  conn.close();
 	  } catch (SQLException e) {
-		  // TODO Auto-generated catch block
 		  e.printStackTrace();
 	  } catch (ClassNotFoundException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	} catch (InstantiationException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	} catch (IllegalAccessException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
+		  e.printStackTrace();
+	  } catch (InstantiationException e) {
+		  e.printStackTrace();
+	  } catch (IllegalAccessException e) {
+		  e.printStackTrace();
+	  }
 	  return returnable;
   }
 
@@ -87,18 +84,24 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 				  ArrayList<TableData> dataSet = allData.getDataforColumn(column);
 				  if(dataSet != null) {
 					  for (TableData item : dataSet) {
-						  sql = "UPDATE dbo.Setup SET " +
-						  "columnHeading = '" + column + "', " +
-						  "checkbox = '" + item.isCheckbox() + "', " +
-						  "label = '" + item.getLabel() + "', " +
-						  "textfields = '" + item.getTextfields() + "', " +
-						  "tab = '" + tab + "', " +
-						  "fieldDescriptions = '" + item.getDescriptionsToString() + "' " +
-						  "WHERE tagID = '" + item.getTagID() + "'";
+						  sql = "UPDATE " + DBNames.TABLE_SETUP + "SET " +
+						  DBNames.SETUP_COLUMN_HEADING + " = '" + column + "', " +
+						  DBNames.SETUP_CHECKBOX + " = '" + item.isCheckbox() + "', " +
+						  DBNames.LABEL + " = '" + item.getLabel() + "', " +
+						  DBNames.TEXTFIELDS + " = '" + item.getTextfields() + "', " +
+						  DBNames.SETUP_TAB + " = '" + tab + "', " +
+						  DBNames.FIELD_DESCRIPTIONS + " = '" + item.getDescriptionsToString() + "' " +
+						  "WHERE "+ DBNames.TAGID + " = '" + item.getTagID() + "'";
 						  int success = stmt.executeUpdate(sql);
 						  if(success == 0) {
 							  sql = "INSERT INTO dbo.Setup " +
-							  "(columnHeading, tagID, checkbox, label, textfields, tab, fieldDescriptions) values (" +
+							  "("+ DBNames.SETUP_COLUMN_HEADING + ", " +
+							  DBNames.TAGID + ", " +
+							  DBNames.SETUP_CHECKBOX + ", " +
+							  DBNames.LABEL +	", " +
+							  DBNames.TEXTFIELDS + ", " +
+							  DBNames.SETUP_TAB + ", " +
+							  DBNames.FIELD_DESCRIPTIONS + ") values (" +
 							  "'" + column + "', " +
 							  "'" + item.getTagID() + "', " +
 							  "'" + item.isCheckbox() + "', " +

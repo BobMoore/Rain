@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import com.follett.mywebapp.client.DatabaseBuilderService;
+import com.follett.mywebapp.util.DBNames;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
@@ -20,24 +21,29 @@ public class DatabaseBuilderServiceImpl extends RemoteServiceServlet implements 
 		Boolean success = Boolean.TRUE;
 		try {
 			Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
-			String url = "jdbc:jtds:sqlserver://127.0.0.1:1433";
-			Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
+			Connection conn = DriverManager.getConnection(DatabaseParameterBean.getDriverAndIp(), DatabaseParameterBean.getConnectionProperties());
 			if(conn == null) {
 				success = Boolean.FALSE;
 			}
 			Statement stmt = conn.createStatement();
-			String sql = "CREATE DATABASE Rain";
+			String sql = "CREATE DATABASE " + DBNames.DB_NAME;
 			stmt.executeUpdate(sql);
-			url = "jdbc:jtds:sqlserver://127.0.0.1:1433/Rain";
-			conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
+			conn = DriverManager.getConnection(DatabaseParameterBean.getDatabaseURL(), DatabaseParameterBean.getConnectionProperties());
 			stmt = conn.createStatement();
-			sql = "CREATE TABLE Code (tagID nvarchar(50) not null, code nvarchar(max), primary key(tagID))";
+			sql = "CREATE TABLE " + DBNames.TABLE_CODE + " (" + DBNames.TAGID + " nvarchar(50) not null, " + DBNames.CODE_CODE +
+				" nvarchar(max), primary key(" + DBNames.TAGID + "))";
 			stmt.executeUpdate(sql);
-			sql = "CREATE TABLE Setup (columnHeading nvarchar(50) not null, tagID nvarchar(50) not null, checkbox bit not null, label nvarchar(50) not null, textfields bigint, tab nvarchar(50) not null, fieldDescriptions nvarchar(max), primary key(tagID))";
+			sql = "CREATE TABLE " + DBNames.TABLE_SETUP + " (" + DBNames.SETUP_COLUMN_HEADING + " nvarchar(50) not null, " + DBNames.TAGID +
+				" nvarchar(50) not null, " + DBNames.SETUP_CHECKBOX + " bit not null, " + DBNames.LABEL + " nvarchar(50) not null, " +
+				DBNames.TEXTFIELDS + " bigint, " + DBNames.SETUP_TAB + " nvarchar(50) not null, " + DBNames.FIELD_DESCRIPTIONS +
+				" nvarchar(max), primary key(" + DBNames.TAGID + "))";
 			stmt.executeUpdate(sql);
-			sql = "CREATE TABLE Tests (TestNumber int not null, Steps nvarchar(max) not null, primary key(TestNumber))";
+			sql = "CREATE TABLE " + DBNames.TABLE_TESTS + " (" + DBNames.TESTS_TEST_NUMBER + " int not null, " + DBNames.TESTS_STEPS + " nvarchar(max) not null, " +
+					"primary key(" + DBNames.TESTS_TEST_NUMBER + "))";
 			stmt.executeUpdate(sql);
-			sql = "CREATE TABLE TreeItems (tagID nvarchar(50) not null, parentTagID nvarchar(50), label text, textfields bigint, fieldDescriptions nvarchar(max) null, primary key(tagID))";
+			sql = "CREATE TABLE " + DBNames.TABLE_VALIDATION + " (" + DBNames.TAGID + " nvarchar(50) not null, " + DBNames.VALIDATION_PARENT_TAG_ID + " nvarchar(50), " +
+			  	DBNames.LABEL + " text, " + DBNames.TEXTFIELDS + " bigint, " + DBNames.FIELD_DESCRIPTIONS + " nvarchar(max) null," +
+			  			" primary key(" + DBNames.TAGID + "))";
 			stmt.executeUpdate(sql);
 		} catch (InstantiationException e) {
 			success = Boolean.FALSE;

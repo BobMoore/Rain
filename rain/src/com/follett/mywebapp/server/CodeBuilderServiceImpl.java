@@ -13,6 +13,7 @@ import org.stringtemplate.v4.*;
 import com.follett.mywebapp.client.CodeBuilderService;
 import com.follett.mywebapp.util.CodeContainer;
 import com.follett.mywebapp.util.CodeStep;
+import com.follett.mywebapp.util.DBNames;
 import com.follett.mywebapp.util.SingleTag;
 import com.follett.mywebapp.util.StepTableData;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
@@ -45,7 +46,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 		  conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String tag = "";
-		  String table = "Setup";
+		  String table = DBNames.TABLE_SETUP;
 		  boolean newStep = false;
 		  while(!tagIDs.isEmpty()) {
 			  if(tagIDs.contains(",")) {
@@ -55,24 +56,24 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 				  tag = tagIDs.trim();
 				  tagIDs = "";
 			  }
-			  if(tag.equals("Validation")) {
-				  table = "TreeItems";
+			  if(tag.equals(DBNames.TABLE_VALIDATION)) {
+				  table = DBNames.TABLE_VALIDATION;
 			  } else if(tag.equals("New Step")) {
 				  newStep = true;
 			  }	else {
-				  ResultSet rs = stmt.executeQuery("SELECT * FROM dbo." + table + " WHERE tagID = '" + tag + "'");
+				  ResultSet rs = stmt.executeQuery("SELECT * FROM " + table + " WHERE " + DBNames.TAGID + " = '" + tag + "'");
 				  if(rs.next()) {
 					  StepTableData tempData = new StepTableData(
-							  rs.getString("tagID"),
-							  rs.getString("label"),
-							  Integer.valueOf(rs.getInt("textfields")),
+							  rs.getString(DBNames.TAGID),
+							  rs.getString(DBNames.LABEL),
+							  Integer.valueOf(rs.getInt(DBNames.TEXTFIELDS)),
 							  true,
 							  newStep);
-					  if(table == "TreeItems") {
+					  if(table == DBNames.TABLE_VALIDATION) {
 						  tempData.setSetup(false);
 						  tempData.setNewStep(true);
 					  }
-					  tempData.addDescriptions(rs.getString("fieldDescriptions"));
+					  tempData.addDescriptions(rs.getString(DBNames.FIELD_DESCRIPTIONS));
 					  returnable.add(tempData);
 					  if(newStep == true) {
 						  newStep = false;
@@ -95,13 +96,13 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "";
-		  sql = "UPDATE dbo.Tests SET " +
-		  "Steps = '" + testSteps + "' " +
-		  "WHERE TestNumber = '" + testNumber + "'";
+		  sql = "UPDATE " + DBNames.TABLE_TESTS + " SET " +
+		  DBNames.TESTS_STEPS + " = '" + testSteps + "' " +
+		  "WHERE " + DBNames.TESTS_TEST_NUMBER + "= '" + testNumber + "'";
 		  int success = stmt.executeUpdate(sql);
 		  if(success == 0) {
-			  sql = "INSERT INTO dbo.Tests " +
-			  "(TestNumber, Steps) values (" +
+			  sql = "INSERT INTO " + DBNames.TABLE_TESTS + " " +
+			  "(" + DBNames.TESTS_TEST_NUMBER + ", " + DBNames.TESTS_STEPS + "Steps) values (" +
 			  "'" + testNumber + "', " +
 			  "'" + testSteps + "' " +
 			  ") ";
@@ -129,7 +130,7 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
 		  String sql = "SELECT COUNT(*) as \"TestExists\"\r\n" +
-		  		"FROM dbo.tests\r\n" +
+		  		"FROM " + DBNames.TABLE_TESTS + "\r\n" +
 		  		"WHERE TestNumber = " + testNumber + ";";
 		  ResultSet rs = stmt.executeQuery(sql);
 		  if(rs.next()) {
@@ -158,11 +159,11 @@ public class CodeBuilderServiceImpl extends RemoteServiceServlet implements Code
 		  String url = DatabaseParameterBean.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
-		  String sql = "SELECT Steps FROM dbo.Tests\r\n" +
-		  		"WHERE TestNumber = "+ testNumber +";";
+		  String sql = "SELECT " + DBNames.TESTS_STEPS + " FROM " + DBNames.TABLE_TESTS + "\r\n" +
+		  		"WHERE " + DBNames.TESTS_TEST_NUMBER + " = " + testNumber + ";";
 		  ResultSet rs = stmt.executeQuery(sql);
 		  if(rs.next()) {
-			  returnable = rs.getString("Steps");
+			  returnable = rs.getString(DBNames.TESTS_STEPS);
 		  }
 		  conn.close();
 	  } catch (InstantiationException e) {

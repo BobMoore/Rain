@@ -48,7 +48,6 @@ public class SetupValidation {
 	}
 
 	public DialogBox createValidationDialogBox() {
-		// Create a dialog box and set the caption text
 		final DialogBox dialogBox = new DialogBox(false);
 
 		Button closeButton = new Button(
@@ -59,7 +58,6 @@ public class SetupValidation {
 					}
 				});
 
-		//evaluate the size of their window and make this the bulk of it.
 		dialogBox.setWidget(buildSetupValidation(closeButton));
 		dialogBox.setGlassEnabled(true);
 		return dialogBox;
@@ -81,7 +79,6 @@ public class SetupValidation {
 		panel.setWidgetBottomHeight(closeButton, 1, Unit.EM, 3, Unit.EM);
 		panel.setWidgetLeftWidth(closeButton, 12, Unit.EM, 10, Unit.EM);
 
-		//create the fields in the main panel to fill out the tree items
 		final TextBox tagID = new TextBox();
 		tagID.setReadOnly(true);
 		tagID.setTitle("Internal TagID. This is a non editable field");
@@ -94,6 +91,10 @@ public class SetupValidation {
 		panel.add(parentTagID);
 		panel.setWidgetLeftWidth(parentTagID, 26, Unit.EM, 10, Unit.EM);
 		panel.setWidgetTopHeight(parentTagID, 5, Unit.EM, 3, Unit.EM);
+		final Button makeParentRoot = new Button("Make Root Item");
+		panel.add(makeParentRoot);
+		panel.setWidgetLeftWidth(makeParentRoot, 38, Unit.EM, 10, Unit.EM);
+		panel.setWidgetTopHeight(makeParentRoot, 1, Unit.EM, 3, Unit.EM);
 		final Button updateParent = new Button("Update Parent");
 		panel.add(updateParent);
 		panel.setWidgetLeftWidth(updateParent, 38, Unit.EM, 10, Unit.EM);
@@ -119,7 +120,6 @@ public class SetupValidation {
 		panel.setWidgetLeftWidth(newNode, 26, Unit.EM, 7, Unit.EM);
 		panel.setWidgetTopHeight(newNode, 25, Unit.EM, 3, Unit.EM);
 
-		//Create a listener for a the tree to put the selection into the fields in the main panel
 		class TreeSelectionHandler implements SelectionHandler<TreeItem>{
 
 			ValidationTreeNode lastSelected = null;
@@ -188,9 +188,6 @@ public class SetupValidation {
 		fieldDescriptions.addKeyPressHandler(enter);
 		fieldDescriptions.addBlurHandler(enter);
 
-		//create a way to change the parent through clicking on the tree
-		//make sure when the parent is changed, the tree is rebuilt and the focus is shifted to the moved location
-
 		class UpdateParentHandler implements ClickHandler {
 
 			@Override
@@ -218,15 +215,32 @@ public class SetupValidation {
 				fields.setText("");
 				fieldDescriptions.setText("");
 			}
+		}
 
+		class MakeParentRootHandler implements ClickHandler {
+
+			@Override
+			public void onClick(ClickEvent event) {
+				updateParent.setText("Update Parent");
+				updateParent.setEnabled(true);
+				if(newNode.isEnabled()) {
+					//this is a non-new item. We are just going to update the selected parent to the root and redraw the tree.
+				}else {
+					//this is a new item that is added to the root. add it and redraw the tree
+					String highestTag = getHighestTag(innerTree);
+					newNode.setEnabled(true);
+					tagID.setText(ValidationTreeNode.incrementTagID(highestTag));
+					description.setText("");
+					fields.setText("");
+					fieldDescriptions.setText("");
+				}
+			}
 		}
 
 		NewStepHandler newNodeHandler = new NewStepHandler();
 		newNode.addClickHandler(newNodeHandler);
 
-		//Add a save tree button that calls a main method to refresh the tree. Also save to the database and have the method call out to the database.
 		class SaveStepsHandler implements ClickHandler {
-
 
 			@Override
 			public void onClick(ClickEvent event) {
@@ -265,12 +279,10 @@ public class SetupValidation {
 	}
 	private Tree buildTree() {
 		final Tree newTree = new Tree();
-		// Initialize the service proxy.
 		if (this.treeBuildingService == null) {
 			this.treeBuildingService = GWT.create(TreeBuilderService.class);
 		}
 
-		// Set up the callback object.
 		AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>> callback = new AsyncCallback<HashMap<String, ArrayList<ValidationTreeDataItem>>>() {
 			public void onFailure(Throwable caught) {
 				newTree.addItem(caught.getMessage());
@@ -322,6 +334,9 @@ public class SetupValidation {
 			if(returnable.compareTo(compare) < 0) {
 				returnable = compare;
 			}
+		}
+		if(returnable == "") {
+			returnable = "AAAAAA";
 		}
 		return returnable;
 	}

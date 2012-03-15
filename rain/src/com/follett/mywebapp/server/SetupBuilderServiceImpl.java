@@ -29,7 +29,6 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 	  try {
 		  //send everything!
 		  Class.forName(DatabaseParameterBean.getTDSDriver()).newInstance();
-
 		  String url = DatabaseParameterBean.getDatabaseURL();
 		  Connection conn = DriverManager.getConnection(url, DatabaseParameterBean.getConnectionProperties());
 		  Statement stmt = conn.createStatement();
@@ -84,7 +83,7 @@ public class SetupBuilderServiceImpl extends RemoteServiceServlet implements Set
 				  ArrayList<TableData> dataSet = allData.getDataforColumn(column);
 				  if(dataSet != null) {
 					  for (TableData item : dataSet) {
-						  sql = "UPDATE " + DBNames.TABLE_SETUP + "SET " +
+						  sql = "UPDATE " + DBNames.TABLE_SETUP + " SET " +
 						  DBNames.SETUP_COLUMN_HEADING + " = '" + column + "', " +
 						  DBNames.SETUP_CHECKBOX + " = '" + item.isCheckbox() + "', " +
 						  DBNames.LABEL + " = '" + item.getLabel() + "', " +

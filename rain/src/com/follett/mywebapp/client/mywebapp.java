@@ -74,13 +74,9 @@ public class mywebapp implements EntryPoint {
 	private CodeBuilderServiceAsync codeBuildingService = GWT.create(CodeBuilderService.class);
 	private DatabaseBuilderServiceAsync databaseBuildingService = GWT.create(DatabaseBuilderService.class);
 
-	/**
-	 * This is the entry point method.
-	 */
 	public void onModuleLoad() {
 
 		AsyncCallback<Boolean> callback = checkDatabaseCallback();
-
 		this.databaseBuildingService.checkDatabase(callback);
 	}
 
@@ -118,87 +114,6 @@ public class mywebapp implements EntryPoint {
 		buildStepTable();
 
 		//Listeners
-
-
-		class SetupDialog implements ClickHandler {
-
-			DialogBox dialog;
-
-			@Override
-			public void onClick(ClickEvent event) {
-				this.dialog = mywebapp.this.setupDialogBox.createSetupDialogBox();
-				this.dialog.show();
-				this.dialog.center();
-			}
-		}
-
-		class CodeDialog implements ClickHandler {
-
-			DialogBox dialog;
-
-			@Override
-			public void onClick(ClickEvent event) {
-				this.dialog = createCodeDialogBox();
-				this.dialog.show();
-				this.dialog.center();
-			}
-		}
-
-		class LoadDialog implements ClickHandler {
-
-			DialogBox dialog;
-
-			@Override
-			public void onClick(ClickEvent event) {
-				this.dialog = createLoadDialog();
-				this.dialog.show();
-				this.dialog.center();
-				LayoutPanel panel = (LayoutPanel) this.dialog.getWidget();
-				int index = -1;
-				for(int a = 0; a < panel.getWidgetCount(); a++) {
-					if(panel.getWidget(a) instanceof TextBox) {
-						index = a;
-					}
-				}
-				if(index > 0) {
-					final TextBox myBox = (TextBox)panel.getWidget(index);
-					if(myBox != null) {
-						Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-							@Override
-							public void execute () {
-								myBox.setFocus(true);
-							}
-						});
-					}
-				}
-			}
-		}
-
-		class TestClear implements ClickHandler {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				mywebapp.this.buildStepTable();
-			}
-		}
-
-
-
-		class SaveHandler implements ClickHandler{
-
-			@Override
-			public void onClick(ClickEvent event) {
-				if (mywebapp.this.codeBuildingService == null) {
-					mywebapp.this.codeBuildingService = GWT.create(SetupBuilderService.class);
-				}
-
-				CodeContainer testCode = extractCode();
-
-				AsyncCallback<Boolean> callback = extractCodeCallback();
-				mywebapp.this.codeBuildingService.saveTest(Integer.valueOf(mywebapp.this.testNumber.getText()).intValue(), testCode.toString(), callback);
-			}
-		}
-
 		CodeDialog cHandler = new CodeDialog();
 		generateCode.addClickHandler(cHandler);
 		SaveHandler saveHandler = new SaveHandler();
@@ -209,6 +124,83 @@ public class mywebapp implements EntryPoint {
 		loadTest.addClickHandler(loadTestHandler);
 		TestClear clear = new TestClear();
 		clearTable.addClickHandler(clear);
+	}
+
+	class SetupDialog implements ClickHandler {
+
+		DialogBox dialog;
+
+		@Override
+		public void onClick(ClickEvent event) {
+			this.dialog = mywebapp.this.setupDialogBox.createSetupDialogBox();
+			this.dialog.show();
+			this.dialog.center();
+		}
+	}
+
+	class CodeDialog implements ClickHandler {
+
+		DialogBox dialog;
+
+		@Override
+		public void onClick(ClickEvent event) {
+			this.dialog = createCodeDialogBox();
+			this.dialog.show();
+			this.dialog.center();
+		}
+	}
+
+	class LoadDialog implements ClickHandler {
+
+		DialogBox dialog;
+
+		@Override
+		public void onClick(ClickEvent event) {
+			this.dialog = createLoadDialog();
+			this.dialog.show();
+			this.dialog.center();
+			LayoutPanel panel = (LayoutPanel) this.dialog.getWidget();
+			int index = -1;
+			for(int a = 0; a < panel.getWidgetCount(); a++) {
+				if(panel.getWidget(a) instanceof TextBox) {
+					index = a;
+				}
+			}
+			if(index > 0) {
+				final TextBox myBox = (TextBox)panel.getWidget(index);
+				if(myBox != null) {
+					Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+						@Override
+						public void execute () {
+							myBox.setFocus(true);
+						}
+					});
+				}
+			}
+		}
+	}
+
+	class TestClear implements ClickHandler {
+
+		@Override
+		public void onClick(ClickEvent event) {
+			mywebapp.this.buildStepTable();
+		}
+	}
+
+	class SaveHandler implements ClickHandler{
+
+		@Override
+		public void onClick(ClickEvent event) {
+			if (mywebapp.this.codeBuildingService == null) {
+				mywebapp.this.codeBuildingService = GWT.create(SetupBuilderService.class);
+			}
+
+			CodeContainer testCode = extractCode();
+
+			AsyncCallback<Boolean> callback = extractCodeCallback();
+			mywebapp.this.codeBuildingService.saveTest(Integer.valueOf(mywebapp.this.testNumber.getText()).intValue(), testCode.toString(), callback);
+		}
 	}
 
 	public DialogBox createCodeDialogBox() {
@@ -222,7 +214,6 @@ public class mywebapp implements EntryPoint {
 					}
 				});
 
-		//evaluate the size of their window and make this the bulk of it.
 		dialogBox.setWidget(buildCodeDialog(closeButton));
 		dialogBox.setGlassEnabled(true);
 		return dialogBox;
@@ -247,7 +238,6 @@ public class mywebapp implements EntryPoint {
 		return panel;
 	}
 
-
 	public DialogBox createDatabaseDialogBox() {
 
 		final DialogBox dialogBox = new DialogBox(false);
@@ -262,7 +252,6 @@ public class mywebapp implements EntryPoint {
 					}
 				});
 
-		//evaluate the size of their window and make this the bulk of it.
 		dialogBox.setWidget(buildDatabaseDialog(closeButton));
 		dialogBox.setGlassEnabled(true);
 		return dialogBox;
@@ -398,7 +387,6 @@ public class mywebapp implements EntryPoint {
 		mp.add(localFlex);
 		mp.setWidgetLeftWidth(localFlex, offsetWidth * .01, Unit.PX, offsetWidth * .95, Unit.PX);
 		mp.setWidgetTopHeight(localFlex, offsetHeight75 * .08, Unit.PX, offsetHeight75 * .92, Unit.PX);
-		System.out.print(offsetHeight75);
 	}
 
 	private final class LoadTestAsync implements AsyncCallback<String> {
@@ -1090,6 +1078,9 @@ public class mywebapp implements EntryPoint {
 							box.addBlurHandler(enter);
 							mainTable.setWidget(a+2, 0, box);
 						}
+						TabChangeHandler change = new TabChangeHandler(selected);
+						tab.addBlurHandler(change);
+						tab.addKeyPressHandler(change);
 						this.lastColumn = null;
 					}
 				}
@@ -1122,6 +1113,28 @@ public class mywebapp implements EntryPoint {
 					}
 				}
 
+				class TabChangeHandler implements KeyPressHandler, BlurHandler{
+					TreeItem item;
+
+					public TabChangeHandler(TreeItem selected) {
+						this.item = selected;
+					}
+
+					@Override
+					public void onKeyPress(KeyPressEvent event) {
+						if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
+							removeData(this.item.getText());
+							addData(this.item.getText());
+						}
+					}
+
+					@Override
+					public void onBlur(BlurEvent event) {
+						removeData(this.item.getText());
+						addData(this.item.getText());
+					}
+				}
+
 				class TabEnterPressHandler implements KeyPressHandler, BlurHandler{
 
 					String tabName;
@@ -1137,7 +1150,7 @@ public class mywebapp implements EntryPoint {
 						Object source = event.getSource();
 						if(source instanceof TextBox) {
 							if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
-								addData();
+								addData(this.tabName);
 							}
 							if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_TAB) {
 								//Tab is firing a blurring event... the jerk
@@ -1151,33 +1164,41 @@ public class mywebapp implements EntryPoint {
 						if(source instanceof TextBox) {
 							if(event.getNativeEvent().getKeyCode() != KeyCodes.KEY_ENTER &&
 									event.getNativeEvent().getKeyCode() != KeyCodes.KEY_TAB) {
-								addData();
+								addData(this.tabName);
 							}
 						}
 					}
 
-					private void addData() {
-						ArrayList<String> columns = new ArrayList<String>();
-						String columnToAdd;
-						String newTabName;
-						newTabName = ((TextBox)mainTable.getWidget(0, 1)).getText();
-						for(int row = 0; row < mainTable.getRowCount(); row++) {
-							if(mainTable.getWidget(row, 0) != null) {
-								columnToAdd = ((TextBox)mainTable.getWidget(row, 0)).getText();
-								if(!columnToAdd.isEmpty()) {
-									columns.add(columnToAdd);
-								}
+				}
+
+				private void addData(String tabName) {
+					ArrayList<String> columns = new ArrayList<String>();
+					String columnToAdd;
+					String newTabName;
+					newTabName = ((TextBox)mainTable.getWidget(0, 1)).getText();
+					for(int row = 0; row < mainTable.getRowCount(); row++) {
+						if(mainTable.getWidget(row, 0) != null) {
+							columnToAdd = ((TextBox)mainTable.getWidget(row, 0)).getText();
+							if(!columnToAdd.isEmpty()) {
+								columns.add(columnToAdd);
 							}
 						}
-						if(allData.doesTabExist(newTabName)) {
-							allData.overWriteColumnsOnTab(newTabName, columns);
-						} else {
-							allData.overWriteTab(this.tabName, newTabName);
-							allData.updateTabWithColumns(this.tabName, newTabName, columns);
-							this.tabName = newTabName;
-						}
-						resetSetupTree(panel, setupTree, allData, setupTree.getSelectedItem());
 					}
+					if(allData.doesTabExist(newTabName)) {
+						allData.overWriteColumnsOnTab(newTabName, columns);
+					} else {
+						allData.overWriteTab(tabName, newTabName);
+						allData.updateTabWithColumns(tabName, newTabName, columns);
+						tabName = newTabName;
+					}
+					resetSetupTree(panel, setupTree, allData, setupTree.getSelectedItem());
+				}
+
+				private void removeData(String tabName) {
+					if(allData.doesTabExist(tabName)) {
+						allData.removeTab(tabName);
+					}
+					resetSetupTree(panel, setupTree, allData, setupTree.getSelectedItem());
 				}
 
 				class EnterPressHandler implements KeyPressHandler, BlurHandler{

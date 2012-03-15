@@ -72,10 +72,15 @@ public class SetupDataItem implements Serializable{
 
 	public static String incrementTagID(String lastTag) {
 		String returnString = "";
-		Integer returnValue = Integer.valueOf(lastTag);
-		returnValue = Integer.valueOf(returnValue.intValue() + 1);
-		for(int a = 0; a < 6 - returnValue.toString().length(); a++) {
-			returnString += "0";
+		Integer returnValue = Integer.valueOf(1);
+		if(lastTag == "") {
+			returnString = "00000";
+		} else {
+			returnValue = Integer.valueOf(lastTag);
+			returnValue = Integer.valueOf(returnValue.intValue() + 1);
+			for(int a = 0; a < 6 - returnValue.toString().length(); a++) {
+				returnString += "0";
+			}
 		}
 		return returnString + returnValue.toString();
 	}
@@ -100,6 +105,20 @@ public class SetupDataItem implements Serializable{
 			if(this.dataInColumn.get(column) == null) {
 				this.dataInColumn.put(column, new ArrayList<TableData>());
 			}
+		}
+	}
+
+	public void removeTab(String tab) {
+		if(doesTabExist(tab)) {
+			ArrayList<String> columns = getColumnsOnTab(tab);
+			if(columns != null && columns.size() > 0) {
+				for (String column : columns) {
+					if(this.dataInColumn.containsKey(column)) {
+						this.dataInColumn.remove(column);
+					}
+				}
+			}
+			this.tabs.remove(tab);
 		}
 	}
 

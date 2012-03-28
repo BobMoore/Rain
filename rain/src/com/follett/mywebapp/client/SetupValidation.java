@@ -93,6 +93,7 @@ public class SetupValidation {
 		panel.setWidgetTopHeight(parentTagID, 5, Unit.EM, 3, Unit.EM);
 		final Button makeParentRoot = new Button("Make Root Item");
 		panel.add(makeParentRoot);
+		makeParentRoot.setEnabled(false);
 		panel.setWidgetLeftWidth(makeParentRoot, 38, Unit.EM, 10, Unit.EM);
 		panel.setWidgetTopHeight(makeParentRoot, 1, Unit.EM, 3, Unit.EM);
 		final Button updateParent = new Button("Update Parent");
@@ -154,6 +155,7 @@ public class SetupValidation {
 						newNode.setEnabled(true);
 					}
 					selected.addItem(this.lastSelected);
+					makeParentRoot.setEnabled(false);
 					innerTree.setSelectedItem(this.lastSelected, true);
 				}
 			}
@@ -195,6 +197,7 @@ public class SetupValidation {
 				if(!parentTagID.getText().isEmpty()) {
 					updateParent.setText("Click new parent");
 					updateParent.setEnabled(false);
+					makeParentRoot.setEnabled(true);
 				}
 			}
 		}
@@ -214,8 +217,12 @@ public class SetupValidation {
 				description.setText("");
 				fields.setText("");
 				fieldDescriptions.setText("");
+				makeParentRoot.setEnabled(true);
 			}
 		}
+
+		NewStepHandler newNodeHandler = new NewStepHandler();
+		newNode.addClickHandler(newNodeHandler);
 
 		class MakeParentRootHandler implements ClickHandler {
 
@@ -224,21 +231,22 @@ public class SetupValidation {
 				updateParent.setText("Update Parent");
 				updateParent.setEnabled(true);
 				if(newNode.isEnabled()) {
-					//this is a non-new item. We are just going to update the selected parent to the root and redraw the tree.
+					ValidationTreeNode selected = (ValidationTreeNode)innerTree.getSelectedItem();
+					if(selected != null) {
+						selected.setParentTagID(null);
+					}
 				}else {
-					//this is a new item that is added to the root. add it and redraw the tree
 					String highestTag = getHighestTag(innerTree);
+					ValidationTreeNode newTreeItem = new ValidationTreeNode(highestTag, null, "New Step", new Integer(0));
+					innerTree.addItem(newTreeItem);
+					innerTree.setSelectedItem(newTreeItem);
 					newNode.setEnabled(true);
-					tagID.setText(ValidationTreeNode.incrementTagID(highestTag));
-					description.setText("");
-					fields.setText("");
-					fieldDescriptions.setText("");
 				}
 			}
 		}
 
-		NewStepHandler newNodeHandler = new NewStepHandler();
-		newNode.addClickHandler(newNodeHandler);
+		MakeParentRootHandler root = new MakeParentRootHandler();
+		makeParentRoot.addClickHandler(root);
 
 		class SaveStepsHandler implements ClickHandler {
 

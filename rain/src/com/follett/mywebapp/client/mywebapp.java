@@ -1534,5 +1534,38 @@ public class mywebapp implements EntryPoint {
 			}
 		};
 	}
+
+	public class DialogBoxCreator {
+
+		final DialogBox dialogBox = new DialogBox(false);
+
+		public DialogBoxCreator() {
+
+		Button closeButton = new Button(
+				"Close", new ClickHandler() {
+					public void onClick(ClickEvent event) {
+						dialogBox.hide();
+					}
+				});
+
+		switch(method) {
+		case 1:
+			this.dialogBox.setWidget(buildCodeDialog(closeButton));
+		case 2:
+			this.dialogBox.setWidget(buildDatabaseDialog(closeButton));
+		case 3:
+			this.dialogBox.setWidget(buildLoadTestDialog(closeButton));
+		case 4:
+			this.dialogBox.setWidget(buildSetupDialogPanel(closeButton));
+
+		}
+		this.dialogBox.setGlassEnabled(true);
+		}
+
+		public DialogBox getMyDialogBox(){
+			return this.dialogBox;
+		}
+	}
+
 }
 

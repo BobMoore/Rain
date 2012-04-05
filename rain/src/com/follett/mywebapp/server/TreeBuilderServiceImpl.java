@@ -82,20 +82,20 @@ public class TreeBuilderServiceImpl extends RemoteServiceServlet implements Tree
 		  Statement stmt = conn.createStatement();
 		  String sql = "";
 		  for (ValidationTreeDataItem item : nodes) {
-			  sql = "UPDATE dbo.TreeItems SET " +
+			  sql = "UPDATE " + DBNames.TABLE_VALIDATION + " SET " +
 			  DBNames.VALIDATION_PARENT_TAG_ID +" = '" + item.getParentTagID() + "', " +
 			  DBNames.LABEL + " = '" + item.getDescription() + "', " +
 			  DBNames.TEXTFIELDS + " = '" + item.getFields() + "', " +
 			  DBNames.FIELD_DESCRIPTIONS + " = '" + item.getDescriptionsToString() + "' " +
-			  "WHERE tagID = '" + item.getTagID() + "'";
+			  "WHERE " + DBNames.TAGID + " = '" + item.getTagID() + "'";
 			  int success = stmt.executeUpdate(sql);
 			  if(success == 0) {
-				  sql = "INSERT INTO dbo.TreeItems " +
+				  sql = "INSERT INTO " + DBNames.TABLE_VALIDATION + " " +
 				  	"(" + DBNames.TAGID + " , " +
 				  	DBNames.VALIDATION_PARENT_TAG_ID + " , " +
 				  	DBNames.LABEL + " , " +
 				  	DBNames.TEXTFIELDS + "," +
-				  	DBNames.FIELD_DESCRIPTIONS + ") values (" +
+				  	DBNames.FIELD_DESCRIPTIONS + ") VALUES (" +
 				  	"'" + item.getTagID() + "', " +
 				  	"'" + item.getParentTagID() + "', " +
 				  	"'" + item.getDescription() + "', " +

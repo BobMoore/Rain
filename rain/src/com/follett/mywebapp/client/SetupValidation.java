@@ -335,7 +335,7 @@ public class SetupValidation {
 		this.t.addSelectionHandler(this.tHandler);
 	}
 
-	private String getHighestTag(Tree tree) {
+	public String getHighestTag(Tree tree) {
 		String returnable = "";
 		for(int a = 0; a < tree.getItemCount(); a++) {
 			String compare = compareChildren((ValidationTreeNode)tree.getItem(a));
